@@ -19,9 +19,11 @@ class GrantAccessController extends Controller
         $patient = Auth::user();
 
         // Check if already granted
-        if (GrantAccess::where('patient_id', $patient->id)
-            ->where('authorized_id', $request->authorized_id)
-            ->where('role_type', $request->role_type)->exists()) {
+        if (
+            GrantAccess::where('patient_id', $patient->id)
+                ->where('authorized_id', $request->authorized_id)
+                ->where('role_type', $request->role_type)->exists()
+        ) {
             return response()->json([
                 'success' => false,
                 'message' => 'Access already granted'
@@ -46,8 +48,8 @@ class GrantAccessController extends Controller
         $patient = Auth::user();
 
         $grant = GrantAccess::where('patient_id', $patient->id)
-            ->where('authorized_id', $authorized_id)->first()
-            ->where('status', 'active');
+            ->where('authorized_id', $request->authorized_id)
+            ->where('role_type', $request->role_type)->first();
 
         if (!$grant) {
             return response()->json([
