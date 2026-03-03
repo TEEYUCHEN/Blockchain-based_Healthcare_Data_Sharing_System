@@ -13,28 +13,56 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:191',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed',
-            'role' => 'required|in:lab,doctor,patient',
-            'phone' => 'nullable|string|max:20',
-            'specialty' => 'nullable|string|max:100',
-            'license_number' => 'nullable|unique:users', // for doctors
-            'wallet_address' => 'required|string|unique:users', // for doctors/labs
-            'signed_message' => 'nullable|string', // MetaMask signature
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'required|string|max:20',
+                'password' => 'required|confirmed|min:6',
+                'role' => 'required|in:patient,doctor,lab',
+                'wallet_address' => 'required|string',
+                'signed_message' => 'required|string',
 
-        $validated['password'] = Hash::make($validated['password']);
+                // conditional fields
+                'address' => 'nullable|required_if:role,patient|string|max:255',
+                'specialty' => 'nullable|required_if:role,doctor|string|max:255',
+                'organization_id' => 'nullable|required_if:role,doctor,lab|string|max:100',
+                'license_number' => 'nullable|required_if:role,doctor|string|max:100',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        // ✅ Verify wallet signature BEFORE marking verified
+        $isWalletValid = Web3Helper::verifySignature(
+            'Verify your wallet for Healthcare DApp',
+            $validated['signed_message'],
+            $validated['wallet_address']
+        );
+
+        if (!$isWalletValid) {
+            return response()->json([
+                'message' => 'Wallet signature invalid',
+            ], 401);
+        }
+
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'specialty' => $request->specialty,
-            'license_number' => $request->license_number,
-            'wallet_address' => $request->wallet_address,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+
+            // extras (nullable columns in DB)
+            'address' => $validated['address'] ?? null,
+            'specialty' => $validated['specialty'] ?? null,
+            'organization_id' => $validated['organization_id'] ?? null,
+            'license_number' => $validated['license_number'] ?? null,
+
+            'wallet_address' => $validated['wallet_address'],
             'wallet_verified' => true,
         ]);
 

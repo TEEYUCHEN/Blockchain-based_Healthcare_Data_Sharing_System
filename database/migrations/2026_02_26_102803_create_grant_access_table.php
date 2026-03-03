@@ -38,6 +38,6 @@ class CreateGrantAccessTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('doctor_patient_access');
+        Schema::dropIfExists('grant_access');
     }
 }

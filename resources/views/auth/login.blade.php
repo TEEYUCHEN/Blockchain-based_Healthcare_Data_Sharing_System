@@ -18,7 +18,7 @@
             <div>
                 <label>Role</label>
                 <select name="role" required>
-                    <option value="">Select role</option>
+                    <option value="" disabled selected hidden>Select role</option>
                     <option value="patient">Patient</option>
                     <option value="doctor">Doctor</option>
                     <option value="lab">Lab</option>

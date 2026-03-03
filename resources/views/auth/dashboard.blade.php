@@ -6,12 +6,17 @@
 
         <p>Welcome, {{ auth()->user()->name }}</p>
 
-        
+
 
         @if(auth()->user()->role === 'patient')
             <h3>Patient Panel</h3>
-            <button>Upload Medical Record</button>
-            <button>Grant Access</button>
+            <a href="{{ route('patient.upload') }}">
+                <button>Upload Medical Record</button>
+            </a>
+
+            <a href="{{ route('patient.grant.access') }}">
+                <button>Grant Access</button>
+            </a>
 
         @elseif(auth()->user()->role === 'doctor')
             <h3>Doctor Panel</h3>

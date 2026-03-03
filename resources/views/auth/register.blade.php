@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <h2>Register</h2>
-        <form id="registerForm">
+        <form id="registerForm" method="POST">
             @csrf
             <div>
                 <label>Name</label>
@@ -12,6 +12,10 @@
             <div>
                 <label>Email</label>
                 <input type="email" name="email" required>
+            </div>
+            <div>
+                <label>Phone</label>
+                <input type="text" name="phone" required>
             </div>
             <div>
                 <label>Password</label>
@@ -24,17 +28,40 @@
             <div>
                 <label>Role</label>
                 <select name="role" required>
-                    <option value="">Select role</option>
+                    <option value="" disabled selected hidden>Select role</option>
                     <option value="patient">Patient</option>
                     <option value="doctor">Doctor</option>
                     <option value="lab">Lab</option>
                 </select>
             </div>
+            {{-- Patient extra --}}
+            <div id="patientFields" style="display:none; margin-top:10px;">
+                <label>Address</label>
+                <input type="text" name="address" id="address_input">
+            </div>
+
+            {{-- Doctor extra --}}
+            <div id="doctorFields" style="display:none; margin-top:10px;">
+                <div>
+                    <label>Specialty</label>
+                    <input type="text" name="specialty" id="specialty_input">
+                </div>
+                <div>
+                    <label>License Number</label>
+                    <input type="text" name="license_number" id="license_input">
+                </div>
+            </div>
+            {{-- Lab and Doctor extra --}}
+            <div id="orgField" style="display:none; margin-top:10px;">
+                <label>Organization ID</label>
+                <input type="text" name="organization_id" id="organization_id_input">
+            </div>
             <input type="hidden" name="wallet_address" id="wallet_address_input">
             <input type="hidden" name="signed_message" id="signed_message_input">
-            <button type="button" id="connectWalletBtn">Connect MetaMask & Register</button>
+            <br><button type="button" id="connectWalletBtn">Connect MetaMask & Register</button>
         </form>
         <p id="errorMsg" style="color:red;"></p>
+        <p id="successMsg" style="color:green;"></p>
 
         <p class="mt-4">
             Already have an account?
@@ -45,6 +72,52 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+
+                const roleSelect = document.querySelector('select[name="role"]');
+
+                const patientFields = document.getElementById('patientFields');
+                const doctorFields = document.getElementById('doctorFields');
+                const orgField = document.getElementById('orgField');
+
+                const addressInput = document.getElementById('address_input');
+                const specialtyInput = document.getElementById('specialty_input');
+                const orgInput = document.getElementById('organization_id_input');
+                const licenseInput = document.getElementById('license_input');
+
+                function hideAll() {
+                    patientFields.style.display = 'none';
+                    doctorFields.style.display = 'none';
+                    orgField.style.display = 'none';
+
+                    addressInput.required = false;
+                    specialtyInput.required = false;
+                    orgInput.required = false;
+                    licenseInput.required = false;
+                }
+
+                function showByRole(role) {
+                    hideAll();
+
+                    if (role === 'patient') {
+                        patientFields.style.display = 'block';
+                        addressInput.required = true;
+                    } else if (role === 'doctor') {
+                        doctorFields.style.display = 'block';
+                        orgField.style.display = 'block';
+                        specialtyInput.required = true;
+                        orgInput.required = true;
+                        licenseInput.required = true;
+                    } else if (role === 'lab') {
+                        orgField.style.display = 'block';
+                        orgInput.required = true;
+                    }
+                }
+
+                roleSelect.addEventListener('change', function () {
+                    showByRole(this.value);
+                });
+
+                showByRole(roleSelect.value);
 
                 const connectWallet = async () => {
                     try {
@@ -66,19 +139,30 @@
                         const formData = new FormData(document.getElementById('registerForm'));
                         const response = await fetch("/api/register", {
                             method: 'POST',
-                            body: formData
+                            body: formData,
+                            headers: { "Accept": "application/json" }
                         });
 
                         const data = await response.json();
 
                         if (!response.ok) {
-                            document.getElementById('errorMsg').textContent =
-                                data.message || JSON.stringify(data);
+
+                            if (data.errors) {
+                                document.getElementById('errorMsg').textContent =
+                                    Object.values(data.errors).flat().join("\n");
+                            } else {
+                                document.getElementById('errorMsg').textContent =
+                                    data.message || "Registration failed";
+                            }
+
                             return;
                         }
 
-                        alert('Registered successfully!');
-                        window.location.href = '/login';
+                        document.getElementById('errorMsg').textContent = '';
+                        document.getElementById('successMsg').textContent =
+                            'Registered successfully! Redirecting to login...';
+
+                        window.location.href = "/login?registered=1";
 
                     } catch (err) {
                         console.error(err);

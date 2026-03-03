@@ -5,29 +5,76 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\GrantAccess;
+use App\Models\User;
+
+
 
 class GrantAccessController extends Controller
 {
-    // Grant access to doctor or lab
+    public function index(Request $request)
+    {
+        $patient = Auth::user();
+        abort_unless($patient && $patient->role === 'patient', 403);
+
+        $tab = $request->get('tab', 'doctor'); // doctor|lab
+
+        $grants = GrantAccess::where('patient_id', $patient->id)
+            ->where('role_type', $tab)
+            ->latest()
+            ->get();
+
+        $authorizedUsers = User::whereIn('id', $grants->pluck('authorized_id'))
+            ->get()
+            ->keyBy('id');
+
+        return view('patient.grant-access', compact('tab', 'grants', 'authorizedUsers'));
+    }
+
+    public function browse(Request $request)
+    {
+        $patient = Auth::user();
+        abort_unless($patient && $patient->role === 'patient', 403);
+
+        $tab = $request->get('tab', 'doctor'); // doctor|lab
+        $q = $request->get('q', '');
+
+        $usersQuery = User::where('role', $tab);
+
+        if ($q !== '') {
+            $usersQuery->where(function ($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        $users = $usersQuery->orderBy('name')->paginate(10);
+        $users->appends(['tab' => $tab, 'q' => $q]); // keep tab + search in pagination
+
+        $grantedIds = GrantAccess::where('patient_id', $patient->id)
+            ->where('role_type', $tab)
+            ->pluck('authorized_id')
+            ->toArray();
+
+        return view('patient.browse-access', compact('tab', 'q', 'users', 'grantedIds'));
+    }
+
     public function store(Request $request)
     {
+        $patient = Auth::user();
+        abort_unless($patient && $patient->role === 'patient', 403);
+
         $request->validate([
             'authorized_id' => 'required|integer',
             'role_type' => 'required|in:doctor,lab',
         ]);
 
-        $patient = Auth::user();
+        $exists = GrantAccess::where('patient_id', $patient->id)
+            ->where('authorized_id', $request->authorized_id)
+            ->where('role_type', $request->role_type)
+            ->exists();
 
-        // Check if already granted
-        if (
-            GrantAccess::where('patient_id', $patient->id)
-                ->where('authorized_id', $request->authorized_id)
-                ->where('role_type', $request->role_type)->exists()
-        ) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access already granted'
-            ], 409);
+        if ($exists) {
+            return back()->with('error', 'Access already granted');
         }
 
         GrantAccess::create([
@@ -36,33 +83,30 @@ class GrantAccessController extends Controller
             'role_type' => $request->role_type,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Access granted'
-        ]);
+        return back()->with('success', 'Access granted');
     }
 
-    // Revoke access
     public function destroy(Request $request)
     {
         $patient = Auth::user();
+        abort_unless($patient && $patient->role === 'patient', 403);
+
+        $request->validate([
+            'authorized_id' => 'required|integer',
+            'role_type' => 'required|in:doctor,lab',
+        ]);
 
         $grant = GrantAccess::where('patient_id', $patient->id)
             ->where('authorized_id', $request->authorized_id)
-            ->where('role_type', $request->role_type)->first();
+            ->where('role_type', $request->role_type)
+            ->first();
 
         if (!$grant) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access not found'
-            ], 404);
+            return back()->with('error', 'Access not found');
         }
 
         $grant->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Access revoked'
-        ]);
+        return back()->with('success', 'Access revoked');
     }
 }

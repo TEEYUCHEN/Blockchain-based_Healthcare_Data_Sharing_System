@@ -25,7 +25,7 @@ class CreateUsersTable extends Migration
             $table->string('profile_pic')->nullable();
             $table->string('specialty', 100)->nullable();
             $table->string('wallet_address', 42)->nullable()->unique();
-            $table->unsignedBigInteger('organization_id')->nullable();
+            $table->string('organization_id')->nullable();
             $table->enum('status', ['active','inactive'])->default('active');
             $table->timestamps();
         });

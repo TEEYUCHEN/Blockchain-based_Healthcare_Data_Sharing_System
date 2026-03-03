@@ -2,41 +2,50 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GrantAccessController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
-// Testing
-Route::get('/', function () {
-    return view('welcome');
-});
+// Home
+Route::get('/', fn() => view('welcome'));
 
 // Register
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register.form');
-
+Route::get('/register', fn() => view('auth.register'))->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 
 // Login
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login.form');
-
+Route::get('/login', fn() => view('auth.login'))->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-// Logout
+// Logout (web session)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Dashboard
-Route::get('/dashboard', function () {
-    return view('auth.dashboard'); // path to your Blade file
-})->middleware('auth')->name('dashboard');
+Route::get('/dashboard', fn() => view('auth.dashboard'))
+    ->middleware('auth')
+    ->name('dashboard');
+
+
+// ======================
+// Patient pages + actions
+// ======================
+Route::middleware('auth')->group(function () {
+
+    Route::get('/patient/upload', function () {
+        abort_unless(auth()->user()->role === 'patient', 403);
+        return view('patient.upload');
+    })->name('patient.upload');
+
+    // Page 1: Granted Access list (tabs)
+    Route::get('/patient/grant-access', [GrantAccessController::class, 'index'])
+        ->name('patient.grant.access');
+
+    // Page 2: Browse doctors/labs (tabs + search)
+    Route::get('/patient/grant-access/browse', [GrantAccessController::class, 'browse'])
+        ->name('patient.grant.access.browse');
+
+    // Actions from forms (redirect back + flash message)
+    Route::post('/patient/grant-access', [GrantAccessController::class, 'store'])
+        ->name('patient.grant.access.store');
+
+    Route::post('/patient/grant-access/revoke', [GrantAccessController::class, 'destroy'])
+        ->name('patient.grant.access.revoke');
+});

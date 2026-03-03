@@ -71,7 +71,10 @@ class LabReportController extends Controller
         if (
             ($user->role === 'doctor' || $user->role === 'lab') &&
             !GrantAccess::where('authorized_id', $user->id)
-                ->where('patient_id', $patient_id)->exists()
+                ->where('patient_id', $patient_id)
+                ->where('role_type', $user->role)
+                ->where('status', 'active')
+                ->exists()
         ) {
             return response()->json(['message' => 'No access'], 403);
         }
