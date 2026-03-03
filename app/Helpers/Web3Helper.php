@@ -13,7 +13,7 @@ class Web3Helper
         // Example (pseudo-code):
         // $recovered = Web3::recover($message, $signature);
         // return strtolower($recovered) === strtolower($walletAddress);
-
+        //return Web3Helper::verifySignature($message, $signature, $walletAddress);
         return true;
     }
 

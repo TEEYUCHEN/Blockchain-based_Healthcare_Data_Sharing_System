@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Testing
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Register
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register.form');
+
+Route::post('/register', [AuthController::class, 'register'])->name('register');
+
+// Login
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login.form');
+
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+
+// Logout
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Dashboard
+Route::get('/dashboard', function () {
+    return view('auth.dashboard'); // path to your Blade file
+})->middleware('auth')->name('dashboard');

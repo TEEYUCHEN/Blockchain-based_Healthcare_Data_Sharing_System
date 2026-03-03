@@ -12,17 +12,17 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-    'email',
-    'password',
-    'role',
-    'wallet_address',
-    'phone',
-    'address',
-    'specialty',      // for doctor/lab
-    'status',         // active/inactive
-    'organization_id', // optional if part of hospital/lab
-    'license_number',  // for doctor/lab
-    'profile_pic',
+        'email',
+        'password',
+        'role',
+        'wallet_address',
+        'phone',
+        'address',
+        'specialty',      // for doctor/lab
+        'status',         // active/inactive
+        'organization_id', // for hospital/lab
+        'license_number',  // for doctor/lab
+        'profile_pic',
     ];
 
     protected $hidden = [
