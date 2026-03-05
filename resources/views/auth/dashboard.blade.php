@@ -10,7 +10,7 @@
 
         @if(auth()->user()->role === 'patient')
             <h3>Patient Panel</h3>
-            <a href="{{ route('patient.upload') }}">
+            <a href="{{ route(name: 'patient.upload') }}">
                 <button>Upload Medical Record</button>
             </a>
 

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrantAccessController;
+use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\PatientUploadController;
 
 // Home
 Route::get('/', fn() => view('welcome'));
@@ -42,10 +44,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/patient/grant-access/browse', [GrantAccessController::class, 'browse'])
         ->name('patient.grant.access.browse');
 
+    // Upload medical record form
+    Route::get('/patient/upload', function () {
+        abort_unless(auth()->user()->role === 'patient', 403);
+        return view('patient.upload');
+    })->name('patient.upload');
+
     // Actions from forms (redirect back + flash message)
     Route::post('/patient/grant-access', [GrantAccessController::class, 'store'])
         ->name('patient.grant.access.store');
 
     Route::post('/patient/grant-access/revoke', [GrantAccessController::class, 'destroy'])
         ->name('patient.grant.access.revoke');
+
+    // Medical records
+    Route::post('/patient/records', [PatientUploadController::class, 'store'])
+        ->name('patient.records.store');
+
+    Route::get('/records', [MedicalRecordController::class, 'index'])
+        ->name('records.index');
+
+    Route::get('/records/{medicalRecord}', [MedicalRecordController::class, 'show'])
+        ->name('records.show');
+
+    Route::get('/records/{medicalRecord}/download', [MedicalRecordController::class, 'download'])
+        ->name('records.download');
+
 });
