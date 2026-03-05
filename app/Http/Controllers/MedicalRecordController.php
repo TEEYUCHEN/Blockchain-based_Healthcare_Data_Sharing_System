@@ -15,7 +15,7 @@ class MedicalRecordController extends Controller
 
         if ($user->role === 'patient') {
             $records = MedicalRecord::where('patient_id', $user->id)->latest()->get();
-            return view('records.index', compact('records'));
+            return view('patient.index', compact('records'));
         }
 
         // doctor/lab: show records for patients they have access to
@@ -24,7 +24,7 @@ class MedicalRecordController extends Controller
         // $records = MedicalRecord::whereIn('patient_id', $patientIds)->latest()->get();
 
         $records = collect(); // placeholder until grant logic is added
-        return view('records.index', compact('records'));
+        return view('patient.index', compact('records'));
     }
 
     // Optional details page

@@ -15,13 +15,13 @@
         <form id="uploadForm">
             @csrf
 
-            <input type="text" name="title" placeholder="Title">
+            <input type="text" name="title" placeholder="Title"><br>
 
-            <textarea name="description" placeholder="Description"></textarea>
+            <textarea name="description" placeholder="Description"></textarea><br>
 
-            <input type="text" name="category" placeholder="Category">
+            <input type="text" name="category" placeholder="Category"><br>
 
-            <input type="file" name="record" required>
+            <input type="file" name="record" required><br>
 
             <button type="submit">Sign with MetaMask & Upload</button>
         </form>

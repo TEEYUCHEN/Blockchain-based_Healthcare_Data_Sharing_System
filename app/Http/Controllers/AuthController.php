@@ -82,34 +82,22 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'role' => 'required|in:patient,doctor,lab',
             'wallet_address' => 'required|string',
             'signed_message' => 'required|string',
         ]);
 
-        // 1️⃣ Verify wallet signature
-        $isWalletValid = Web3Helper::verifySignature(
-            'Login to Healthcare DApp',
-            $request->signed_message,
-            $request->wallet_address
-        );
-
-        if (!$isWalletValid) {
-            return redirect()->back()->with('error', 'Wallet signature invalid');
-        }
-
-        // 2️⃣ Check email + password + wallet match
         $user = User::where('email', $request->email)
+            ->where('role', $request->role)
             ->where('wallet_address', $request->wallet_address)
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return redirect()->back()->with('error', 'Wrong email, password, or wallet address');
+            return redirect()->back()->with('error', 'Wrong credentials');
         }
 
-        // 3️⃣ Login the user
         Auth::login($user);
 
-        // 4️⃣ Redirect to dashboard based on role (optional)
         return redirect()->route('dashboard');
     }
 

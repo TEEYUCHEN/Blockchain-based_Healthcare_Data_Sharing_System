@@ -18,6 +18,10 @@
                 <button>Grant Access</button>
             </a>
 
+            <a href="{{ route('patient.records') }}">
+                <button>View My Medical Records</button>
+            </a>
+
         @elseif(auth()->user()->role === 'doctor')
             <h3>Doctor Panel</h3>
             <button>View Patient Reports</button>

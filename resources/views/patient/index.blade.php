@@ -6,6 +6,12 @@
     <div class="container">
         <h2>My Medical Records</h2>
 
+        <div style="margin-bottom: 15px;">
+            <a href="{{ route('dashboard') }}">
+                <button type="button">← Back to Dashboard</button>
+            </a>
+        </div>
+
         <div style="margin: 10px 0;">
             <a href="{{ url('/patient/upload') }}">Upload New Record</a>
             {{-- change this link to your upload page route --}}

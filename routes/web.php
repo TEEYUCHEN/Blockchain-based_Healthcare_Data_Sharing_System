@@ -31,6 +31,10 @@ Route::get('/dashboard', fn() => view('auth.dashboard'))
 // ======================
 Route::middleware('auth')->group(function () {
 
+    Route::get('/patient/records', [MedicalRecordController::class, 'index'])
+        ->name('patient.records');
+
+
     Route::get('/patient/upload', function () {
         abort_unless(auth()->user()->role === 'patient', 403);
         return view('patient.upload');
