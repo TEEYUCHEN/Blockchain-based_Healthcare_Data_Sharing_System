@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GrantAccessController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PatientUploadController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ProfileController;
 
 // Home
 Route::get('/', fn() => view('welcome'));
@@ -74,4 +76,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/records/{medicalRecord}/download', [MedicalRecordController::class, 'download'])
         ->name('records.download');
 
+});
+
+// Doctor Panel Routes
+Route::middleware(['auth', 'role:doctor'])->group(function () {
+    Route::get('/doctor/patient-list', [\App\Http\Controllers\DoctorController::class, 'patientList'])->name('doctor.patient_list');
+
+    Route::get('/doctor/view-patient-reports', function () {
+        return view('doctor.view_patient_reports');
+    })->name('doctor.view_patient_reports');
+
+    Route::get('/doctor/write-diagnosis', function () {
+        return view('doctor.write_diagnosis');
+    })->name('doctor.write_diagnosis');
+
+    Route::get('/doctor/patient-details/{id}', [\App\Http\Controllers\DoctorController::class, 'patientDetails'])->name('doctor.patient_details');
+});
+
+// Profile Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'view'])->name('profile.view');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });

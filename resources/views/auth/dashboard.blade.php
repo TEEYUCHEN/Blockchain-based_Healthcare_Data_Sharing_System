@@ -24,8 +24,17 @@
 
         @elseif(auth()->user()->role === 'doctor')
             <h3>Doctor Panel</h3>
-            <button>View Patient Reports</button>
-            <button>Write Diagnosis</button>
+            <a href="{{ route('doctor.patient_list') }}">
+                <button>Patient List</button>
+            </a>
+
+            <a href="{{ route('doctor.view_patient_reports') }}">
+                <button>View Patient Reports</button>
+            </a>
+
+            <a href="{{ route('doctor.write_diagnosis') }}">
+                <button>Write Diagnosis</button>
+            </a>
 
         @elseif(auth()->user()->role === 'lab')
             <h3>Lab Panel</h3>
@@ -39,5 +48,9 @@
                 Logout
             </button>
         </form>
+        <!-- Personal Profile Button -->
+        <a href="{{ route('profile.view') }}">
+            <button>Personal Profile</button>
+        </a>
     </div>
 @endsection
