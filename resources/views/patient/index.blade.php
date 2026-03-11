@@ -51,7 +51,7 @@
 
                                 @if($r->uploaded_by_role === 'patient')
                                     {{-- Optional: wire to API delete later --}}
-                                    <button type="button" onclick="alert('Hook delete API here')">
+                                    <button type="button" onclick="deleteRecord({{ $r->id }})">
                                         Delete
                                     </button>
                                 @endif
@@ -85,9 +85,58 @@
 
 @push('scripts')
     <script>
+
         function toggleDetails(id) {
             const row = document.getElementById('details-' + id);
             row.style.display = (row.style.display === 'none' || row.style.display === '') ? 'table-row' : 'none';
         }
+
+        async function deleteRecord(id) {
+
+            try {
+
+                if (!window.wallet) {
+                    alert("Wallet module not loaded");
+                    return;
+                }
+
+                if (!confirm("Are you sure you want to delete this record?")) {
+                    return;
+                }
+
+                const message = "Authorize deletion of medical record #" + id;
+
+                const { address, signature } = await window.wallet.sign(message);
+
+                const response = await fetch(`/records/${id}/delete`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        wallet_address: address,
+                        signed_message: signature
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || "Delete failed");
+                    return;
+                }
+
+                alert("Record deleted successfully");
+                location.reload();
+
+            } catch (err) {
+
+                console.error(err);
+                alert(err.message || "MetaMask signing failed");
+
+            }
+        }
+
     </script>
 @endpush

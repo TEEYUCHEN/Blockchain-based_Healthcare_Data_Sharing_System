@@ -42,10 +42,12 @@
                         <td>{{ $u?->name ?? ('User #' . $g->authorized_id) }}</td>
                         <td>{{ $u?->specialty ?? $u?->email ?? '-' }}</td>
                         <td>
-                            <form method="POST" action="{{ route('patient.grant.access.revoke') }}">
+                            <form method="POST" action="{{ route('patient.grant.access.revoke') }}" class="wallet-auth-form">
                                 @csrf
                                 <input type="hidden" name="role_type" value="{{ $tab }}">
                                 <input type="hidden" name="authorized_id" value="{{ $g->authorized_id }}">
+                                <input type="hidden" name="wallet_address" class="wallet_address_input">
+                                <input type="hidden" name="signed_message" class="signed_message_input">
                                 <button type="submit">Revoke</button>
                             </form>
                         </td>
@@ -59,3 +61,51 @@
         </table>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const forms = document.querySelectorAll('.wallet-auth-form');
+
+            forms.forEach(form => {
+
+                form.addEventListener('submit', async function (e) {
+
+                    e.preventDefault();
+
+                    try {
+
+                        if (!window.wallet) {
+                            alert("Wallet module not loaded");
+                            return;
+                        }
+
+                        const message = "Authorize healthcare access change";
+
+                        const { address, signature } = await window.wallet.sign(message);
+
+                        console.log("Wallet:", address);
+                        console.log("Signature:", signature);
+
+                        form.querySelector('.wallet_address_input').value = address;
+                        form.querySelector('.signed_message_input').value = signature;
+
+                        form.submit();
+
+                    } catch (err) {
+
+                        console.error(err);
+                        alert(err.message || "MetaMask signing failed");
+
+                    }
+
+                });
+
+            });
+
+        });
+
+    </script>
+@endpush

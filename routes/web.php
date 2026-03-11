@@ -8,8 +8,10 @@ use App\Http\Controllers\PatientUploadController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ProfileController;
 
-// Home
-Route::get('/', fn() => view('welcome'));
+// Default page when start server
+Route::get('/', function () {
+    return redirect()->route('login.form');
+});
 
 // Register
 Route::get('/register', fn() => view('auth.register'))->name('register.form');
@@ -35,12 +37,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/patient/records', [MedicalRecordController::class, 'index'])
         ->name('patient.records');
-
-
-    Route::get('/patient/upload', function () {
-        abort_unless(auth()->user()->role === 'patient', 403);
-        return view('patient.upload');
-    })->name('patient.upload');
 
     // Page 1: Granted Access list (tabs)
     Route::get('/patient/grant-access', [GrantAccessController::class, 'index'])
@@ -76,25 +72,32 @@ Route::middleware('auth')->group(function () {
     Route::get('/records/{medicalRecord}/download', [MedicalRecordController::class, 'download'])
         ->name('records.download');
 
+    Route::post('/records/{id}/delete', [MedicalRecordController::class, 'delete'])
+        ->name('records.delete');
+
 });
 
 // Doctor Panel Routes
 Route::middleware(['auth', 'role:doctor'])->group(function () {
-    Route::get('/doctor/patient-list', [\App\Http\Controllers\DoctorController::class, 'patientList'])->name('doctor.patient_list');
+    Route::get('/doctor/patient-list', [DoctorController::class, 'patientList'])->name('doctor.patient_list');
 
-    Route::get('/doctor/view-patient-reports', function () {
-        return view('doctor.view_patient_reports');
-    })->name('doctor.view_patient_reports');
+    Route::get('/doctor/view-patient-reports', [DoctorController::class, 'viewPatientReports'])
+        ->name('doctor.view_patient_reports');
 
-    Route::get('/doctor/write-diagnosis', function () {
-        return view('doctor.write_diagnosis');
-    })->name('doctor.write_diagnosis');
+    Route::get('/doctor/patient-reports/{id}', [DoctorController::class, 'patientReports'])
+        ->name('doctor.patient_reports');
 
-    Route::get('/doctor/patient-details/{id}', [\App\Http\Controllers\DoctorController::class, 'patientDetails'])->name('doctor.patient_details');
+    Route::get('/doctor/write-diagnosis', [DoctorController::class, 'writeDiagnosis'])
+        ->name('doctor.write_diagnosis');
+
+    Route::post('/doctor/submit-diagnosis', [DoctorController::class, 'submitDiagnosis'])
+        ->name('doctor.submit_diagnosis');
+
+    Route::get('/doctor/patient-details/{id}', [DoctorController::class, 'patientDetails'])->name('doctor.patient_details');
 });
 
 // Profile Routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'view'])->name('profile.view');
-    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', [ProfileController::class, 'view'])->name('profile.view');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });

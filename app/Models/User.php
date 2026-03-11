@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(GrantAccess::class, 'doctor_id');
     }
+
+    public function medicalRecords()
+    {
+        return $this->hasMany(\App\Models\MedicalRecord::class, 'patient_id');
+    }
 }

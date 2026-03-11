@@ -18,10 +18,6 @@ class MedicalRecordController extends Controller
             return view('patient.index', compact('records'));
         }
 
-        // doctor/lab: show records for patients they have access to
-        // TODO: Replace with your actual grant logic/table:
-        // $patientIds = AuthorizedAccess::where('authorized_id', $user->id)->pluck('patient_id');
-        // $records = MedicalRecord::whereIn('patient_id', $patientIds)->latest()->get();
 
         $records = collect(); // placeholder until grant logic is added
         return view('patient.index', compact('records'));
@@ -75,5 +71,21 @@ class MedicalRecordController extends Controller
 
         // TEMP: block until you implement grant check
         abort(403);
+    }
+
+    public function delete($id)
+    {
+        $record = MedicalRecord::findOrFail($id);
+
+        // Optional: check ownership
+        if ($record->patient_id !== auth()->id()) {
+            abort(403, "Unauthorized");
+        }
+
+        $record->delete();
+
+        return response()->json([
+            'message' => 'Record deleted successfully'
+        ]);
     }
 }
