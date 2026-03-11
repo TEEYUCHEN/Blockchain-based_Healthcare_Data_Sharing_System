@@ -27,4 +27,15 @@ class DoctorController extends Controller
 
         return view('doctor.patient_details', compact('patient'));
     }
+
+    public function viewPatientReports()
+    {
+        // Fetch the reports for patients who have granted access to the authenticated doctor
+        $reports = GrantAccess::where('authorized_id', Auth::id())
+            ->where('role_type', 'doctor')
+            ->with('patient', 'patient.reports') // Assuming 'reports' is a relationship on the Patient model
+            ->get();
+
+        return view('doctor.view_patient_reports', compact('reports'));
+    }
 }
