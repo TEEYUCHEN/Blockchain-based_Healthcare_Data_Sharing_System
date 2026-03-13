@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LabReport extends Model
 {
+    protected $table = 'lab_report';
     protected $fillable = [
         'lab_id',
         'patient_id',

@@ -1,91 +1,124 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Write Diagnosis</h2>
+    <div class="container">
 
-    <div style="margin-top: 15px;">
-        <a href="{{ route('dashboard') }}">
-            <button type="button" class="btn btn-secondary">← Back to Dashboard</button>
-        </a>
+        <h2>Write Diagnosis</h2>
+
+        <div style="margin-top: 15px;">
+            <a href="{{ route('dashboard') }}">
+                <button type="button" class="btn btn-secondary">← Back to Dashboard</button>
+            </a>
+        </div>
+
+        @if(session('success'))
+            <p style="color:green">{{ session('success') }}</p>
+        @endif
+
+        <form method="POST" action="{{ route('doctor.submit_diagnosis') }}" enctype="multipart/form-data"
+            id="diagnosisForm">
+            @csrf
+
+            <!-- Patient selection -->
+            <div class="form-group">
+                <label for="patient_id">Select Patient</label>
+
+                <select name="patient_id" id="patient_id" class="form-control" required>
+
+                    <option value="">-- Select Patient --</option>
+
+                    @foreach($patients as $grant)
+                        <option value="{{ $grant->patient->id }}">
+                            {{ $grant->patient->name }}
+                        </option>
+                    @endforeach
+
+                </select>
+            </div>
+
+
+            <!-- Diagnosis -->
+            <div class="form-group">
+                <label for="diagnosis">Diagnosis</label>
+
+                <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4"
+                    placeholder="Enter diagnosis"></textarea>
+            </div>
+
+
+            <!-- Prescription -->
+            <div class="form-group">
+                <label for="prescription">Prescription</label>
+
+                <textarea name="prescription" id="prescription" class="form-control" rows="4"
+                    placeholder="Enter prescription"></textarea>
+            </div>
+
+
+            <!-- File upload -->
+            <div class="form-group">
+                <label for="report_file">Upload Report File</label>
+
+                <input type="file" name="report_file" id="report_file" class="form-control-file"
+                    accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+
+            <!-- Wallet verification -->
+            <input type="hidden" name="wallet_address" id="wallet_address_input">
+            <input type="hidden" name="signed_message" id="signed_message_input">
+
+
+            <button type="submit" class="btn btn-primary">
+                Sign with MetaMask & Submit
+            </button>
+
+        </form>
+
     </div>
 
-    <form method="POST" action="{{ route('doctor.submit_diagnosis') }}" enctype="multipart/form-data"
-        id="diagnosisForm">
-        @csrf
 
-        <div class="form-group">
-            <label for="patient_id">Select Patient</label>
-            <select name="patient_id" id="patient_id" class="form-control" required>
-                <option value="">-- Select Patient --</option>
-                @foreach($patients as $patient)
-                    <option value="{{ $patient->id }}">{{ $patient->name }}</option>
-                @endforeach
-            </select>
-        </div>
+    @push('scripts')
 
-        <div class="form-group">
-            <label for="diagnosis">Diagnosis</label>
-            <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4"
-                placeholder="Enter diagnosis"></textarea>
-        </div>
+        <script>
 
-        <div class="form-group">
-            <label for="prescription">Prescription</label>
-            <textarea name="prescription" id="prescription" class="form-control" rows="4"
-                placeholder="Enter prescription"></textarea>
-        </div>
+            document.addEventListener('DOMContentLoaded', function () {
 
-        <div class="form-group">
-            <label for="report_file">Upload Report File</label>
-            <input type="file" name="report_file" id="report_file" class="form-control-file">
-        </div>
+                const form = document.getElementById('diagnosisForm');
 
-        <input type="hidden" name="wallet_address" id="wallet_address_input">
-        <input type="hidden" name="signed_message" id="signed_message_input">
+                form.addEventListener('submit', async function (e) {
 
-        <button type="submit" class="btn btn-primary">Submit Report</button>
-    </form>
+                    e.preventDefault();
 
+                    try {
 
-</div>
+                        if (!window.wallet) {
+                            alert("Wallet module not loaded");
+                            return;
+                        }
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
+                        const message = "Authorize doctor diagnosis submission";
 
-        const form = document.getElementById('diagnosisForm');
+                        const { address, signature } = await window.wallet.sign(message);
 
-        form.addEventListener('submit', async function (e) {
+                        document.getElementById('wallet_address_input').value = address;
+                        document.getElementById('signed_message_input').value = signature;
 
-            e.preventDefault();
+                        form.submit();
 
-            try {
+                    } catch (err) {
 
-                if (!window.wallet) {
-                    alert("Wallet module not loaded");
-                    return;
-                }
+                        console.error(err);
+                        alert(err.message || "MetaMask signing failed");
 
-                const message = "Authorize doctor diagnosis submission";
+                    }
 
-                const { address, signature } = await window.wallet.sign(message);
+                });
 
-                document.getElementById('wallet_address_input').value = address;
-                document.getElementById('signed_message_input').value = signature;
+            });
 
-                form.submit();
+        </script>
 
-            } catch (err) {
+    @endpush
 
-                console.error(err);
-                alert(err.message || "MetaMask signing failed");
-
-            }
-
-        });
-
-    });
-</script>
-@endpush
 @endsection

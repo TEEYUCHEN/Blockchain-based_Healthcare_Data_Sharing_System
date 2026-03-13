@@ -5,7 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\GrantAccessController;
 use App\Http\Controllers\DoctorReportController;
-use App\Http\Controllers\LabReportController;
+use App\Http\Controllers\LabController;
 use App\Http\Controllers\PatientUploadController;
 
 Route::post('/wallet-auth', [WalletController::class, 'verifySignature']);
@@ -27,8 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/doctor-reports/{patient_id}', [DoctorReportController::class, 'index']);
 
     // Lab reports
-    Route::post('/lab-reports', [LabReportController::class, 'store']);
-    Route::get('/lab-reports/{patient_id}', [LabReportController::class, 'index']);
+    Route::post('/lab-reports', [LabController::class, 'store']);
+    Route::get('/lab-reports/{patient_id}', [LabController::class, 'index']);
 
     // Patient uploads (medical records)
     Route::get('/patient/records', [PatientUploadController::class, 'index']);

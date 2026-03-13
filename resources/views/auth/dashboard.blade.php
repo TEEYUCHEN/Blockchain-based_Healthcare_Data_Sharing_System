@@ -38,8 +38,9 @@
 
         @elseif(auth()->user()->role === 'lab')
             <h3>Lab Panel</h3>
-            <button>Upload Lab Result</button>
-            <button>View Test Requests</button>
+            <a href="{{ route('lab.patient_list') }}">
+                <button>Patient List</button>
+            </a>
         @endif
         <!-- Logout Button -->
         <form method="POST" action="{{ route('logout') }}">

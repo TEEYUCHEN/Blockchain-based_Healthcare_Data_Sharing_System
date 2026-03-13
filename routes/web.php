@@ -7,6 +7,7 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PatientUploadController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LabController;
 
 // Default page when start server
 Route::get('/', function () {
@@ -94,6 +95,17 @@ Route::middleware(['auth', 'role:doctor'])->group(function () {
         ->name('doctor.submit_diagnosis');
 
     Route::get('/doctor/patient-details/{id}', [DoctorController::class, 'patientDetails'])->name('doctor.patient_details');
+});
+
+Route::middleware(['auth', 'role:lab'])->group(function () {
+    Route::get('/lab/patient_list', [LabController::class, 'patients'])
+        ->name('lab.patient_list');
+
+    Route::post('/lab/upload', [LabController::class, 'store'])
+        ->name('lab.upload');
+
+    Route::get('/lab/reports/{patient_id}', [LabController::class, 'index'])
+        ->name('lab.reports');
 });
 
 // Profile Routes
