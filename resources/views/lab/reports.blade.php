@@ -1,113 +1,136 @@
 @extends('layouts.app')
 
-@section('title', 'Patient Reports')
-
 @section('content')
 
     <div class="container">
 
-        <h2>Patient Reports</h2>
+        <h2>{{ $patient->name }} Medical Records</h2>
 
-        <div style="margin-bottom:15px;">
+        <!-- 🔹 Action Buttons -->
+        <div style="margin: 15px 0; display:flex; gap:10px;">
             <a href="{{ route('lab.patient_list') }}">
-                <button>← Back to Patient List</button>
+                <button class="btn btn-secondary">← Back to Patient List</button>
+            </a>
+
+            <a href="{{ route('lab.write_lab_report', ['patient' => $patient->id, 'from' => 'reports']) }}">
+                <button class="btn btn-primary">Write Lab Report</button>
             </a>
         </div>
 
-        <h3>Lab Reports</h3>
+        <!-- 🔹 Tabs -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <a href="{{ route('lab.reports', ['patient_id' => $patient->id, 'tab' => 'patient']) }}">
+                <button @if($tab === 'patient') style="font-weight:bold;" @endif>
+                    Patient Uploads
+                </button>
+            </a>
 
-        @if($labReports->isEmpty())
-            <p>No lab reports.</p>
-        @else
-            <table border="1" cellpadding="8">
-                <tr>
-                    <th>Test Type</th>
-                    <th>Result</th>
-                    <th>File</th>
-                    <th>Date</th>
-                </tr>
+            <a href="{{ route('lab.reports', ['patient_id' => $patient->id, 'tab' => 'doctor']) }}">
+                <button @if($tab === 'doctor') style="font-weight:bold;" @endif>
+                    Doctor Reports
+                </button>
+            </a>
 
-                @foreach($labReports as $report)
+            <a href="{{ route('lab.reports', ['patient_id' => $patient->id, 'tab' => 'lab']) }}">
+                <button @if($tab === 'lab') style="font-weight:bold;" @endif>
+                    Lab Reports
+                </button>
+            </a>
+        </div>
+
+        <!-- 🔹 Patient Uploads -->
+        @if($tab === 'patient')
+            <h3>Patient Uploads</h3>
+
+            @if($patientRecords->isEmpty())
+                <p>No patient records.</p>
+            @else
+                <table class="table">
                     <tr>
-                        <td>{{ $report->test_type }}</td>
-                        <td>{{ $report->result }}</td>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>File</th>
+                        <th>Date</th>
+                    </tr>
 
-                        <td>
-                            @if($report->report_file)
-                                <a href="{{ Storage::disk('s3')->temporaryUrl($report->report_file, now()->addMinutes(60)) }}">
+                    @foreach($patientRecords as $record)
+                        <tr>
+                            <td>{{ $record->title }}</td>
+                            <td>{{ $record->description }}</td>
+                            <td>
+                                <a href="{{ route('records.download', ['type' => 'medical', 'id' => $record->id]) }}">
                                     Download
                                 </a>
-                            @endif
-                        </td>
-
-                        <td>{{ $report->created_at }}</td>
-                    </tr>
-                @endforeach
-            </table>
+                            </td>
+                            <td>{{ $record->created_at }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endif
         @endif
 
 
-        <h3>Doctor Reports</h3>
+        <!-- 🔹 Doctor Reports -->
+        @if($tab === 'doctor')
+            <h3>Doctor Reports</h3>
 
-        @if($doctorReports->isEmpty())
-            <p>No doctor reports.</p>
-        @else
-            <table border="1" cellpadding="8">
-                <tr>
-                    <th>Diagnosis</th>
-                    <th>Prescription</th>
-                    <th>File</th>
-                    <th>Date</th>
-                </tr>
-
-                @foreach($doctorReports as $report)
+            @if($doctorReports->isEmpty())
+                <p>No doctor reports.</p>
+            @else
+                <table class="table">
                     <tr>
-                        <td>{{ $report->diagnosis }}</td>
-                        <td>{{ $report->prescription }}</td>
+                        <th>Diagnosis</th>
+                        <th>Prescription</th>
+                        <th>File</th>
+                        <th>Date</th>
+                    </tr>
 
-                        <td>
-                            @if($report->report_file)
-                                <a href="{{ Storage::disk('s3')->temporaryUrl($report->report_file, now()->addMinutes(60)) }}">
+                    @foreach($doctorReports as $report)
+                        <tr>
+                            <td>{{ $report->diagnosis }}</td>
+                            <td>{{ $report->prescription }}</td>
+                            <td>
+                                <a href="{{ route('records.download', ['type' => 'doctor', 'id' => $report->id]) }}">
                                     Download
                                 </a>
-                            @endif
-                        </td>
-
-                        <td>{{ $report->created_at }}</td>
-                    </tr>
-                @endforeach
-            </table>
+                            </td>
+                            <td>{{ $report->created_at }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endif
         @endif
 
 
-        <h3>Patient Uploads</h3>
+        <!-- 🔹 Lab Reports -->
+        @if($tab === 'lab')
+            <h3>Lab Reports</h3>
 
-        @if($patientRecords->isEmpty())
-            <p>No patient records.</p>
-        @else
-            <table border="1" cellpadding="8">
-                <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>File</th>
-                    <th>Date</th>
-                </tr>
-
-                @foreach($patientRecords as $record)
+            @if($labReports->isEmpty())
+                <p>No lab reports.</p>
+            @else
+                <table class="table">
                     <tr>
-                        <td>{{ $record->title }}</td>
-                        <td>{{ $record->description }}</td>
-
-                        <td>
-                            <a href="{{ Storage::disk('s3')->temporaryUrl($record->stored_path, now()->addMinutes(60)) }}">
-                                Download
-                            </a>
-                        </td>
-
-                        <td>{{ $record->created_at }}</td>
+                        <th>Test Type</th>
+                        <th>Result</th>
+                        <th>File</th>
+                        <th>Date</th>
                     </tr>
-                @endforeach
-            </table>
+
+                    @foreach($labReports as $report)
+                        <tr>
+                            <td>{{ $report->test_type }}</td>
+                            <td>{{ $report->result }}</td>
+                            <td>
+                                <a href="{{ route('records.download', ['type' => 'lab', 'id' => $report->id]) }}">
+                                    Download
+                                </a>
+                            </td>
+                            <td>{{ $report->created_at }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endif
         @endif
 
     </div>

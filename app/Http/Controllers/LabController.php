@@ -27,7 +27,14 @@ class LabController extends Controller
         return view('lab.patient_list', compact('patients'));
     }
 
+    public function create(Request $request, $patient_id)
+    {
+        $patient = User::findOrFail($patient_id);
 
+        $from = $request->query('from'); // optional (for back button)
+
+        return view('lab.write_lab_report', compact('patient', 'from'));
+    }
 
     // Upload lab result
     public function store(Request $request)
@@ -83,37 +90,33 @@ class LabController extends Controller
 
 
     // View all reports for a patient
-    public function index($patient_id)
+    public function index(Request $request, $patient_id)
     {
-        $user = Auth::user();
-
-        // Patient can view their own reports
-        if ($user->role === 'patient' && $user->id == $patient_id) {
-            $hasAccess = true;
-        } else {
-            $hasAccess = GrantAccess::where('authorized_id', $user->id)
-                ->where('patient_id', $patient_id)
-                ->where('role_type', $user->role)
-                ->where('status', 'active')
-                ->exists();
-        }
+        // 🔒 Access check
+        $hasAccess = GrantAccess::where('authorized_id', auth()->id())
+            ->where('patient_id', $patient_id)
+            ->where('role_type', 'lab')
+            ->where('status', 'active')
+            ->exists();
 
         if (!$hasAccess) {
             abort(403);
         }
 
+        $patient = User::findOrFail($patient_id);
 
-        $labReports = LabReport::where('patient_id', $patient_id)->latest()->get();
-
-        $doctorReports = DoctorReport::where('patient_id', $patient_id)->latest()->get();
+        $tab = $request->query('tab', 'lab');
 
         $patientRecords = MedicalRecord::where('patient_id', $patient_id)->latest()->get();
-
+        $doctorReports = DoctorReport::where('patient_id', $patient_id)->latest()->get();
+        $labReports = LabReport::where('patient_id', $patient_id)->latest()->get();
 
         return view('lab.reports', compact(
-            'labReports',
+            'patient',
+            'patientRecords',
             'doctorReports',
-            'patientRecords'
+            'labReports',
+            'tab'
         ));
     }
 }

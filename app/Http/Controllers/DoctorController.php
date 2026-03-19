@@ -8,6 +8,7 @@ use App\Models\MedicalRecord;
 use App\Models\DoctorReport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Models\LabReport;
 
 class DoctorController extends Controller
 {
@@ -64,27 +65,23 @@ class DoctorController extends Controller
     }
 
 
-    public function patientReports($id)
+    public function patientReports(Request $request, $id)
     {
-        // Check doctor access
-        $hasAccess = GrantAccess::where('authorized_id', Auth::id())
-            ->where('patient_id', $id)
-            ->where('role_type', 'doctor')
-            ->where('status', 'active')
-            ->exists();
-
-        if (!$hasAccess) {
-            abort(403, 'Unauthorized access to patient reports');
-        }
-
         $patient = User::findOrFail($id);
 
-        // Patient uploaded records
-        $records = MedicalRecord::where('patient_id', $id)
-            ->latest()
-            ->get();
+        $tab = $request->query('tab', 'patient'); // default tab
 
-        return view('doctor.patient_reports', compact('patient', 'records'));
+        $patientRecords = MedicalRecord::where('patient_id', $id)->latest()->get();
+        $doctorReports = DoctorReport::where('patient_id', $id)->latest()->get();
+        $labReports = LabReport::where('patient_id', $id)->latest()->get();
+
+        return view('doctor.patient_reports', compact(
+            'patient',
+            'patientRecords',
+            'doctorReports',
+            'labReports',
+            'tab'
+        ));
     }
 
 

@@ -26,8 +26,7 @@
                     <tr>
                         <th>Patient Name</th>
                         <th>Email</th>
-                        <th>Upload Lab Result</th>
-                        <th>View Reports</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
@@ -38,39 +37,23 @@
                             <td>{{ $grant->patient->name }}</td>
                             <td>{{ $grant->patient->email }}</td>
 
-                            <td>
-                                <form action="{{ route('lab.upload') }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
+                            <td style="display:flex; gap:8px;">
 
-                                    <input type="hidden" name="patient_id" value="{{ $grant->patient->id }}">
-
-                                    <div style="margin-bottom:6px;">
-                                        <input type="text" name="test_type" placeholder="Test Type (e.g. Blood Test)" required>
-                                    </div>
-
-                                    <div style="margin-bottom:6px;">
-                                        <textarea name="result" placeholder="Result / Notes" rows="2" required></textarea>
-                                    </div>
-
-                                    <div style="margin-bottom:6px;">
-                                        <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
-                                    </div>
-
-                                    <button type="submit">Upload Result</button>
-
-                                </form>
-                            </td>
-
-                            <td>
+                                <!-- View Reports -->
                                 <a href="{{ route('lab.reports', $grant->patient->id) }}">
-                                    <button>View Reports</button>
+                                    <button class="btn btn-info">View Reports</button>
                                 </a>
+
+                                <!-- Upload Lab Report -->
+                                <a href="{{ route('lab.write_lab_report', ['patient' => $grant->patient->id, 'from' => 'patient_list']) }}">
+                                    <button class="btn btn-primary">Write Lab Report</button>
+                                </a>
+
                             </td>
 
                         </tr>
                     @endforeach
                 </tbody>
-
             </table>
 
         @endif

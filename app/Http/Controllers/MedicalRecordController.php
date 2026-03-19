@@ -5,22 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\MedicalRecord;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\GrantAccess;
+use App\Models\DoctorReport;
+use App\Models\LabReport;
+use Illuminate\Http\Request;
 
 class MedicalRecordController extends Controller
 {
     // List records page
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        if ($user->role === 'patient') {
-            $records = MedicalRecord::where('patient_id', $user->id)->latest()->get();
-            return view('patient.index', compact('records'));
-        }
+        $tab = $request->query('tab', 'patient');
 
+        $records = MedicalRecord::where('patient_id', $user->id)
+            ->when($tab, function ($query) use ($tab) {
+                return $query->where('uploaded_by_role', $tab);
+            })
+            ->latest()
+            ->get();
 
-        $records = collect(); // placeholder until grant logic is added
-        return view('patient.index', compact('records'));
+        return view('patient.index', compact('records', 'tab'));
     }
 
     // Optional details page
@@ -31,27 +37,70 @@ class MedicalRecordController extends Controller
     }
 
     // Download file from Backblaze (s3)
-    public function download(MedicalRecord $medicalRecord)
+    public function download($type, $id)
     {
         $user = Auth::user();
 
-        // Patient can only download their own records
-        if (!$user || $medicalRecord->patient_id !== $user->id) {
-            abort(403);
+        // 🔍 Determine record type
+        switch ($type) {
+            case 'medical':
+                $record = MedicalRecord::findOrFail($id);
+                $path = $record->stored_path;
+                $patientId = $record->patient_id;
+                $filename = $record->original_filename ?? 'medical_record';
+                break;
+
+            case 'doctor':
+                $record = DoctorReport::findOrFail($id);
+                $path = $record->report_file;
+                $patientId = $record->patient_id;
+                $filename = 'doctor_report_' . $id;
+                break;
+
+            case 'lab':
+                $record = LabReport::findOrFail($id);
+                $path = $record->report_file;
+                $patientId = $record->patient_id;
+                $filename = 'lab_report_' . $id;
+                break;
+
+            default:
+                abort(404, 'Invalid file type');
         }
 
+        // 🔐 Access Control
+
+        // ✅ Patient: can access own records
+        if ($user->role === 'patient') {
+            if ($user->id !== $patientId) {
+                abort(403, 'Unauthorized');
+            }
+        }
+
+        // ✅ Doctor / Lab: must have granted access
+        elseif (in_array($user->role, ['doctor', 'lab'])) {
+
+            $hasAccess = GrantAccess::where('authorized_id', $user->id)
+                ->where('patient_id', $patientId)
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'Access denied');
+            }
+        } else {
+            abort(403, 'Invalid role');
+        }
+
+        // 📁 File check
         $disk = Storage::disk('s3');
-        $path = $medicalRecord->stored_path;
 
         if (!$disk->exists($path)) {
-            abort(404);
+            abort(404, 'File not found');
         }
 
-        $stream = $disk->readStream($path);
-
-        return response()->streamDownload(function () use ($stream) {
-            fpassthru($stream);
-        }, $medicalRecord->original_filename);
+        // 📥 Download
+        return $disk->download($path, $filename);
     }
 
     // Basic authorization (patient owns OR doctor/lab granted)

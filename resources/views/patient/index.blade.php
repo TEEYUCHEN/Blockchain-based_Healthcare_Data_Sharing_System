@@ -6,16 +6,48 @@
     <div class="container">
         <h2>My Medical Records</h2>
 
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+
+            <a href="{{ route('patient.records', ['tab' => 'patient']) }}">
+                <button @if($tab === 'patient') style="font-weight:bold;" @endif>
+                    My Uploads
+                </button>
+            </a>
+
+            <a href="{{ route('patient.records', ['tab' => 'doctor']) }}">
+                <button @if($tab === 'doctor') style="font-weight:bold;" @endif>
+                    Doctor Reports
+                </button>
+            </a>
+
+            <a href="{{ route('patient.records', ['tab' => 'lab']) }}">
+                <button @if($tab === 'lab') style="font-weight:bold;" @endif>
+                    Lab Reports
+                </button>
+            </a>
+
+        </div>
+
+        <h3>
+            @if($tab === 'patient') My Uploads
+            @elseif($tab === 'doctor') Doctor Reports
+            @elseif($tab === 'lab') Lab Reports
+            @endif
+        </h3>
+
         <div style="margin-bottom: 15px;">
             <a href="{{ route('dashboard') }}">
                 <button type="button">← Back to Dashboard</button>
             </a>
         </div>
 
-        <div style="margin: 10px 0;">
-            <a href="{{ url('/patient/upload') }}">Upload New Record</a>
-            {{-- change this link to your upload page route --}}
-        </div>
+        @if($tab === 'patient')
+            <div style="margin: 10px 0;">
+                <a href="{{ url('/patient/upload') }}">
+                    <button>Upload New Record</button>
+                </a>
+            </div>
+        @endif
 
         @if($records->isEmpty())
             <p>No records found.</p>
@@ -43,7 +75,9 @@
                             <td>{{ $r->verification_status }}</td>
                             <td>{{ $r->created_at->format('Y-m-d H:i') }}</td>
                             <td>
-                                <a href="{{ route('records.download', $r->id) }}">Download</a>
+                                <a href="{{ route('records.download', ['type' => 'medical', 'id' => $r->id]) }}">
+                                    Download
+                                </a>
 
                                 <button type="button" onclick="toggleDetails({{ $r->id }})">
                                     Details

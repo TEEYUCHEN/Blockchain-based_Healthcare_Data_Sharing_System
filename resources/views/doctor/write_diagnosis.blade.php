@@ -16,14 +16,9 @@
                     <button class="btn btn-secondary">← Back to patient report</button>
                 </a>
 
-            @elseif($from == 'view_patient_reports')
-                <a href="{{ route('patient.view_patient_reports', $patient->id) }}">
-                    <button class="btn btn-secondary">← Back to view report</button>
-                </a>
-
             @else
                 <a href="{{ route('dashboard') }}">
-                    <button class="btn btn-secondary">← Back</button>
+                    <button class="btn btn-secondary">← Back to Dashboard</button>
                 </a>
             @endif
         </div>

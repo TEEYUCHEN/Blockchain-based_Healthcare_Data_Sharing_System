@@ -65,9 +65,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/records/{medicalRecord}', [MedicalRecordController::class, 'show'])
         ->name('records.show');
 
-    Route::get('/records/{medicalRecord}/download', [MedicalRecordController::class, 'download'])
-        ->name('records.download');
-
     Route::post('/records/{id}/delete', [MedicalRecordController::class, 'delete'])
         ->name('records.delete');
 
@@ -96,6 +93,9 @@ Route::middleware(['auth', 'role:lab'])->group(function () {
     Route::get('/lab/patient_list', [LabController::class, 'patients'])
         ->name('lab.patient_list');
 
+    Route::get('/lab/write_lab_report/{patient}', [LabController::class, 'create'])
+        ->name('lab.write_lab_report');
+
     Route::post('/lab/upload', [LabController::class, 'store'])
         ->name('lab.upload');
 
@@ -107,4 +107,12 @@ Route::middleware(['auth', 'role:lab'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'view'])->name('profile.view');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+// File download route
+Route::middleware(['auth', 'role:patient,doctor,lab'])->group(function () {
+
+    Route::get('/records/download/{type}/{id}', [MedicalRecordController::class, 'download'])
+        ->name('records.download');
+
 });
