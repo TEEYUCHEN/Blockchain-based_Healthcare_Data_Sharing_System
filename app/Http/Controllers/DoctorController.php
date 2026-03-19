@@ -12,6 +12,14 @@ use Illuminate\Http\Request;
 class DoctorController extends Controller
 {
 
+    public function create(Request $request, $patient_id)
+    {
+        $patient = User::findOrFail($patient_id);
+        $from = $request->query('from'); // get source
+
+        return view('doctor.write_diagnosis', compact('patient', 'from'));
+    }
+
     public function patientList()
     {
         // Patients who granted access to this doctor

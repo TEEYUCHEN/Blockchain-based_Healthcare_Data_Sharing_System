@@ -4,11 +4,8 @@
     <div class="container">
         <h2>Dashboard</h2>
 
-        <p>Welcome, {{ auth()->user()->name }}</p>
-
-
-
         @if(auth()->user()->role === 'patient')
+        <p>Welcome, {{ auth()->user()->name }}</p>
             <h3>Patient Panel</h3>
             <a href="{{ route(name: 'patient.upload') }}">
                 <button>Upload Medical Record</button>
@@ -23,20 +20,14 @@
             </a>
 
         @elseif(auth()->user()->role === 'doctor')
+        <p>Welcome, Doctor {{ auth()->user()->name }}</p>
             <h3>Doctor Panel</h3>
             <a href="{{ route('doctor.patient_list') }}">
                 <button>Patient List</button>
             </a>
 
-            <a href="{{ route('doctor.view_patient_reports') }}">
-                <button>View Patient Reports</button>
-            </a>
-
-            <a href="{{ route('doctor.write_diagnosis') }}">
-                <button>Write Diagnosis</button>
-            </a>
-
         @elseif(auth()->user()->role === 'lab')
+        <p>Welcome to the Lab {{ auth()->user()->name }}</p>
             <h3>Lab Panel</h3>
             <a href="{{ route('lab.patient_list') }}">
                 <button>Patient List</button>

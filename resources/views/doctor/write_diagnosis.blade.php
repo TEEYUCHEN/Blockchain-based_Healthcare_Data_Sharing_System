@@ -6,9 +6,26 @@
         <h2>Write Diagnosis</h2>
 
         <div style="margin-top: 15px;">
-            <a href="{{ route('dashboard') }}">
-                <button type="button" class="btn btn-secondary">← Back to Dashboard</button>
-            </a>
+            @if($from == 'patient_list')
+                <a href="{{ route('doctor.patient_list') }}">
+                    <button class="btn btn-secondary">← Back to patient list</button>
+                </a>
+
+            @elseif($from == 'patient_reports')
+                <a href="{{ route('patient.reports') }}">
+                    <button class="btn btn-secondary">← Back to patient report</button>
+                </a>
+
+            @elseif($from == 'view_patient_reports')
+                <a href="{{ route('patient.view_patient_reports', $patient->id) }}">
+                    <button class="btn btn-secondary">← Back to view report</button>
+                </a>
+
+            @else
+                <a href="{{ route('dashboard') }}">
+                    <button class="btn btn-secondary">← Back</button>
+                </a>
+            @endif
         </div>
 
         @if(session('success'))
@@ -23,17 +40,9 @@
             <div class="form-group">
                 <label for="patient_id">Select Patient</label>
 
-                <select name="patient_id" id="patient_id" class="form-control" required>
+                <input type="hidden" name="patient_id" value="{{ $patient->id }}">
 
-                    <option value="">-- Select Patient --</option>
-
-                    @foreach($patients as $grant)
-                        <option value="{{ $grant->patient->id }}">
-                            {{ $grant->patient->name }}
-                        </option>
-                    @endforeach
-
-                </select>
+                <p><strong>Patient:</strong> {{ $patient->name }}</p>
             </div>
 
 

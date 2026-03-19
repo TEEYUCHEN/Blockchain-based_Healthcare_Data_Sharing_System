@@ -28,6 +28,14 @@
                                 <a href="{{ route('doctor.patient_details', ['id' => $grant->patient->id]) }}" target="_blank">
                                     <button>View Details</button>
                                 </a>
+
+                                <a href="{{ route('doctor.patient_reports', ['id' => $grant->patient->id]) }}" target="_blank">
+                                    <button>View Medical Records</button>
+                                </a>
+
+                                <a href="{{ route('doctor.write_diagnosis', ['patient' => $grant->patient->id, 'from' => 'patient_list']) }}">
+                                    <button class="btn btn-primary">Write Diagnosis</button>
+                                </a>
                             </td>
                         </tr>
                     @endforeach
