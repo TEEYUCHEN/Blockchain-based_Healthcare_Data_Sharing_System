@@ -59,44 +59,44 @@
         </p>
     </div>
 
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
+@endsection
 
-                const connectWalletBtn = document.getElementById('connectWalletBtn');
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
 
-                connectWalletBtn.addEventListener('click', async function () {
+            const connectWalletBtn = document.getElementById('connectWalletBtn');
 
-                    try {
+            connectWalletBtn.addEventListener('click', async function () {
 
-                        if (!window.wallet) {
-                            alert("Wallet module not loaded");
-                            return;
-                        }
+                try {
 
-                        const message = "Login to Healthcare DApp";
-
-                        const { address, signature } = await window.wallet.sign(message);
-
-                        console.log("Wallet address:", address);
-                        console.log("Signature:", signature);
-
-                        document.getElementById('wallet_address_input').value = address;
-                        document.getElementById('signed_message_input').value = signature;
-
-                        document.getElementById('loginForm').submit();
-
-                    } catch (err) {
-
-                        console.error(err);
-                        alert(err.message || "MetaMask signing failed");
-
+                    if (!window.wallet) {
+                        alert("Wallet module not loaded");
+                        return;
                     }
 
-                });
+                    const message = "Login to Healthcare DApp";
+
+                    const { address, signature } = await window.wallet.sign(message);
+
+                    console.log("Wallet address:", address);
+                    console.log("Signature:", signature);
+
+                    document.getElementById('wallet_address_input').value = address;
+                    document.getElementById('signed_message_input').value = signature;
+
+                    document.getElementById('loginForm').submit();
+
+                } catch (err) {
+
+                    console.error(err);
+                    alert(err.message || "MetaMask signing failed");
+
+                }
 
             });
-        </script>
-    @endpush
 
-@endsection
+        });
+    </script>
+@endpush

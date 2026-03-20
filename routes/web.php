@@ -31,9 +31,7 @@ Route::get('/dashboard', fn() => view('auth.dashboard'))
     ->name('dashboard');
 
 
-// ======================
-// Patient pages + actions
-// ======================
+// Patient Panel Routes
 Route::middleware('auth')->group(function () {
 
     Route::get('/patient/records', [MedicalRecordController::class, 'index'])
@@ -41,6 +39,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/patient/grant-access', [GrantAccessController::class, 'index'])
         ->name('patient.grant.access');
+
+    Route::get('/patient/records', [PatientUploadController::class, 'index'])->name('patient.records');
 
     Route::get('/patient/grant-access/browse', [GrantAccessController::class, 'browse'])
         ->name('patient.grant.access.browse');
@@ -85,6 +85,12 @@ Route::middleware(['auth', 'role:doctor'])->group(function () {
     Route::post('/doctor/submit-diagnosis', [DoctorController::class, 'submitDiagnosis'])
         ->name('doctor.submit_diagnosis');
 
+    Route::get('/doctor/report/{id}/edit', [DoctorController::class, 'edit'])
+        ->name('doctor.edit_report');
+
+    Route::post('/doctor/report/{id}/update', [DoctorController::class, 'update'])
+        ->name('doctor.update_report');
+
     Route::get('/doctor/patient-details/{id}', [DoctorController::class, 'patientDetails'])->name('doctor.patient_details');
 });
 
@@ -101,6 +107,12 @@ Route::middleware(['auth', 'role:lab'])->group(function () {
 
     Route::get('/lab/reports/{patient_id}', [LabController::class, 'index'])
         ->name('lab.reports');
+
+    Route::get('/lab/report/{id}/edit', [LabController::class, 'edit'])
+        ->name('lab.edit_report');
+
+    Route::post('/lab/report/{id}/update', [LabController::class, 'update'])
+        ->name('lab.update_report');
 });
 
 // Profile Routes
@@ -110,7 +122,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // File download route
-Route::middleware(['auth', 'role:patient,doctor,lab'])->group(function () {
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/records/view/{type}/{id}', [MedicalRecordController::class, 'view'])
+        ->name('records.view');
 
     Route::get('/records/download/{type}/{id}', [MedicalRecordController::class, 'download'])
         ->name('records.download');

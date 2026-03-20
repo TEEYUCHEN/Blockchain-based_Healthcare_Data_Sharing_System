@@ -69,120 +69,122 @@
         </p>
     </div>
 
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-
-                const roleSelect = document.querySelector('select[name="role"]');
-
-                const patientFields = document.getElementById('patientFields');
-                const doctorFields = document.getElementById('doctorFields');
-                const orgField = document.getElementById('orgField');
-
-                const addressInput = document.getElementById('address_input');
-                const addressLabel = document.getElementById('addressLabel');
-                const specialtyInput = document.getElementById('specialty_input');
-                const orgInput = document.getElementById('organization_id_input');
-                const licenseInput = document.getElementById('license_input');
-
-                function hideAll() {
-                    patientFields.style.display = 'none';
-                    doctorFields.style.display = 'none';
-                    orgField.style.display = 'none';
-
-                    addressInput.required = false;
-                    specialtyInput.required = false;
-                    orgInput.required = false;
-                    licenseInput.required = false;
-                }
-
-                function showByRole(role) {
-                    hideAll();
-
-                    if (role === 'patient') {
-                        patientFields.style.display = 'block';
-                        addressLabel.textContent = "Address";
-                        addressInput.required = true;
-
-                    } else if (role === 'doctor') {
-                        doctorFields.style.display = 'block';
-                        orgField.style.display = 'block';
-
-                        specialtyInput.required = true;
-                        licenseInput.required = true;
-                        orgInput.required = true;
-
-                    } else if (role === 'lab') {
-                        patientFields.style.display = 'block'; // reuse address
-                        orgField.style.display = 'block';
-
-                        addressLabel.textContent = "Lab Address";
-                        addressInput.required = true;
-                        orgInput.required = true;
-                    }
-                }
-
-                roleSelect.addEventListener('change', function () {
-                    showByRole(this.value);
-                });
-
-                showByRole(roleSelect.value);
-
-                const connectWallet = async () => {
-                    try {
-
-                        if (!window.wallet) {
-                            document.getElementById('errorMsg').textContent = 'Wallet module not loaded';
-                            return;
-                        }
-
-                        const message = "Verify your wallet for Healthcare DApp";
-
-                        // 🔥 Use reusable wallet helper
-                        const { address, signature } =
-                            await window.wallet.sign(message);
-
-                        document.getElementById('wallet_address_input').value = address;
-                        document.getElementById('signed_message_input').value = signature;
-
-                        const formData = new FormData(document.getElementById('registerForm'));
-                        const response = await fetch("/api/register", {
-                            method: 'POST',
-                            body: formData,
-                            headers: { "Accept": "application/json" }
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-
-                            if (data.errors) {
-                                document.getElementById('errorMsg').textContent =
-                                    Object.values(data.errors).flat().join("\n");
-                            } else {
-                                document.getElementById('errorMsg').textContent =
-                                    data.message || "Registration failed";
-                            }
-
-                            return;
-                        }
-
-                        document.getElementById('errorMsg').textContent = '';
-                        document.getElementById('successMsg').textContent =
-                            'Registered successfully! Redirecting to login...';
-
-                        window.location.href = "/login?registered=1";
-
-                    } catch (err) {
-                        console.error(err);
-                        document.getElementById('errorMsg').textContent =
-                            err.message || 'An error occurred';
-                    }
-                };
-
-                document.getElementById('connectWalletBtn')
-                    .addEventListener('click', connectWallet);
-            });
-        </script>
-    @endpush
 @endsection
+
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const roleSelect = document.querySelector('select[name="role"]');
+
+            const patientFields = document.getElementById('patientFields');
+            const doctorFields = document.getElementById('doctorFields');
+            const orgField = document.getElementById('orgField');
+
+            const addressInput = document.getElementById('address_input');
+            const addressLabel = document.getElementById('addressLabel');
+            const specialtyInput = document.getElementById('specialty_input');
+            const orgInput = document.getElementById('organization_id_input');
+            const licenseInput = document.getElementById('license_input');
+
+            function hideAll() {
+                patientFields.style.display = 'none';
+                doctorFields.style.display = 'none';
+                orgField.style.display = 'none';
+
+                addressInput.required = false;
+                specialtyInput.required = false;
+                orgInput.required = false;
+                licenseInput.required = false;
+            }
+
+            function showByRole(role) {
+                hideAll();
+
+                if (role === 'patient') {
+                    patientFields.style.display = 'block';
+                    addressLabel.textContent = "Address";
+                    addressInput.required = true;
+
+                } else if (role === 'doctor') {
+                    doctorFields.style.display = 'block';
+                    orgField.style.display = 'block';
+
+                    specialtyInput.required = true;
+                    licenseInput.required = true;
+                    orgInput.required = true;
+
+                } else if (role === 'lab') {
+                    patientFields.style.display = 'block'; // reuse address
+                    orgField.style.display = 'block';
+
+                    addressLabel.textContent = "Lab Address";
+                    addressInput.required = true;
+                    orgInput.required = true;
+                }
+            }
+
+            roleSelect.addEventListener('change', function () {
+                showByRole(this.value);
+            });
+
+            showByRole(roleSelect.value);
+
+            const connectWallet = async () => {
+                try {
+
+                    if (!window.wallet) {
+                        document.getElementById('errorMsg').textContent = 'Wallet module not loaded';
+                        return;
+                    }
+
+                    const message = "Verify your wallet for Healthcare DApp";
+
+                    // 🔥 Use reusable wallet helper
+                    const { address, signature } =
+                        await window.wallet.sign(message);
+
+                    document.getElementById('wallet_address_input').value = address;
+                    document.getElementById('signed_message_input').value = signature;
+
+                    const formData = new FormData(document.getElementById('registerForm'));
+                    const response = await fetch("/api/register", {
+                        method: 'POST',
+                        body: formData,
+                        headers: { "Accept": "application/json" }
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+
+                        if (data.errors) {
+                            document.getElementById('errorMsg').textContent =
+                                Object.values(data.errors).flat().join("\n");
+                        } else {
+                            document.getElementById('errorMsg').textContent =
+                                data.message || "Registration failed";
+                        }
+
+                        return;
+                    }
+
+                    document.getElementById('errorMsg').textContent = '';
+                    document.getElementById('successMsg').textContent =
+                        'Registered successfully! Redirecting to login...';
+
+                    window.location.href = "/login?registered=1";
+
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('errorMsg').textContent =
+                        err.message || 'An error occurred';
+                }
+            };
+
+            document.getElementById('connectWalletBtn')
+                .addEventListener('click', connectWallet);
+        });
+    </script>
+@endpush

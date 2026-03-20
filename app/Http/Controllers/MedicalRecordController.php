@@ -36,49 +36,47 @@ class MedicalRecordController extends Controller
         return view('records.show', compact('medicalRecord'));
     }
 
-    // Download file from Backblaze (s3)
-    public function download($type, $id)
+    private function getRecordData($type, $id)
     {
-        $user = Auth::user();
-
-        // 🔍 Determine record type
         switch ($type) {
             case 'medical':
                 $record = MedicalRecord::findOrFail($id);
-                $path = $record->stored_path;
-                $patientId = $record->patient_id;
-                $filename = $record->original_filename ?? 'medical_record';
-                break;
+                return [
+                    'path' => $record->stored_path,
+                    'patient_id' => $record->patient_id,
+                    'filename' => $record->original_filename ?? 'medical_record'
+                ];
 
             case 'doctor':
                 $record = DoctorReport::findOrFail($id);
-                $path = $record->report_file;
-                $patientId = $record->patient_id;
-                $filename = 'doctor_report_' . $id;
-                break;
+                return [
+                    'path' => $record->report_file,
+                    'patient_id' => $record->patient_id,
+                    'filename' => 'doctor_report_' . $id
+                ];
 
             case 'lab':
                 $record = LabReport::findOrFail($id);
-                $path = $record->report_file;
-                $patientId = $record->patient_id;
-                $filename = 'lab_report_' . $id;
-                break;
+                return [
+                    'path' => $record->report_file,
+                    'patient_id' => $record->patient_id,
+                    'filename' => 'lab_report_' . $id
+                ];
 
             default:
                 abort(404, 'Invalid file type');
         }
+    }
 
-        // 🔐 Access Control
+    private function checkAccess($patientId)
+    {
+        $user = Auth::user();
 
-        // ✅ Patient: can access own records
         if ($user->role === 'patient') {
             if ($user->id !== $patientId) {
                 abort(403, 'Unauthorized');
             }
-        }
-
-        // ✅ Doctor / Lab: must have granted access
-        elseif (in_array($user->role, ['doctor', 'lab'])) {
+        } elseif (in_array($user->role, ['doctor', 'lab'])) {
 
             $hasAccess = GrantAccess::where('authorized_id', $user->id)
                 ->where('patient_id', $patientId)
@@ -91,16 +89,57 @@ class MedicalRecordController extends Controller
         } else {
             abort(403, 'Invalid role');
         }
+    }
 
-        // 📁 File check
+    public function view($type, $id)
+    {
+        $data = $this->getRecordData($type, $id);
+
+        $this->checkAccess($data['patient_id']);
+
         $disk = Storage::disk('s3');
 
-        if (!$disk->exists($path)) {
+        if (!$disk->exists($data['path'])) {
             abort(404, 'File not found');
         }
 
-        // 📥 Download
-        return $disk->download($path, $filename);
+        // VIEW (no forced download)
+        $url = $disk->temporaryUrl($data['path'], now()->addMinutes(5));
+
+        return redirect($url);
+    }
+
+    // Download file from Backblaze (s3)
+    public function download($type, $id)
+    {
+        if ($type === 'doctor') {
+            $report = DoctorReport::findOrFail($id);
+
+            return Storage::disk('s3')->download(
+                $report->report_file,
+                $report->original_filename ?? 'doctor_report.pdf'
+            );
+        }
+
+        if ($type === 'lab') {
+            $report = LabReport::findOrFail($id);
+
+            return Storage::disk('s3')->download(
+                $report->report_file,
+                $report->original_filename ?? 'lab_report.pdf'
+            );
+        }
+
+        if ($type === 'medical') {
+            $record = MedicalRecord::findOrFail($id);
+
+            return Storage::disk('s3')->download(
+                $record->stored_path,
+                $record->original_filename ?? 'medical_record.pdf'
+            );
+        }
+
+        abort(404);
     }
 
     // Basic authorization (patient owns OR doctor/lab granted)

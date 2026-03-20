@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\GrantAccessController;
-use App\Http\Controllers\DoctorReportController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\PatientUploadController;
 
@@ -23,8 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/grant-access/{authorized_id}', [GrantAccessController::class, 'destroy']);
 
     // Doctor reports
-    Route::post('/doctor-reports', [DoctorReportController::class, 'store']);
-    Route::get('/doctor-reports/{patient_id}', [DoctorReportController::class, 'index']);
+    Route::post('/doctor-reports', [DoctorController::class, 'store']);
+    Route::get('/doctor-reports/{patient_id}', [DoctorController::class, 'index']);
 
     // Lab reports
     Route::post('/lab-reports', [LabController::class, 'store']);

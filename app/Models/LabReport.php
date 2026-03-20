@@ -6,14 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class LabReport extends Model
 {
-    protected $table = 'lab_report';
     protected $fillable = [
         'lab_id',
         'patient_id',
         'test_type',
         'result',
-        'file_path',
+        'report_file',
+        'original_filename',
+        'file_hash',
     ];
+
+    // 🔗 Relationships
 
     public function lab()
     {

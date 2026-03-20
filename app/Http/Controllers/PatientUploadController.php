@@ -6,7 +6,8 @@ use App\Models\MedicalRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Models\LabReport;
+use App\Models\DoctorReport;
 use App\Helpers\Web3Helper;
 
 class PatientUploadController extends Controller
@@ -74,19 +75,30 @@ class PatientUploadController extends Controller
         ], 201);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        if (!$user || $user->role !== 'patient') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        $tab = $request->query('tab', 'patient');
 
-        $records = MedicalRecord::where('patient_id', $user->id)
+        $patientRecords = MedicalRecord::where('patient_id', $user->id)->latest()->get();
+
+        $doctorReports = DoctorReport::with('doctor')
+            ->where('patient_id', $user->id)
             ->latest()
             ->get();
 
-        return response()->json(['records' => $records]);
+        $labReports = LabReport::with('lab')
+            ->where('patient_id', $user->id)
+            ->latest()
+            ->get();
+
+        return view('patient.index', compact(
+            'patientRecords',
+            'doctorReports',
+            'labReports',
+            'tab'
+        ));
     }
 
     public function destroy(MedicalRecord $medicalRecord)

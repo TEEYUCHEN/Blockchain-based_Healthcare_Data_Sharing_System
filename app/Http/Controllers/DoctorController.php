@@ -9,6 +9,7 @@ use App\Models\DoctorReport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\LabReport;
+use App\Helpers\Web3Helper;
 
 class DoctorController extends Controller
 {
@@ -67,13 +68,23 @@ class DoctorController extends Controller
 
     public function patientReports(Request $request, $id)
     {
+        $hasAccess = GrantAccess::where('authorized_id', Auth::id())
+            ->where('patient_id', $id)
+            ->where('role_type', 'doctor')
+            ->where('status', 'active')
+            ->exists();
+
+        if (!$hasAccess) {
+            abort(403);
+        }
+
         $patient = User::findOrFail($id);
 
         $tab = $request->query('tab', 'patient'); // default tab
 
         $patientRecords = MedicalRecord::where('patient_id', $id)->latest()->get();
-        $doctorReports = DoctorReport::where('patient_id', $id)->latest()->get();
-        $labReports = LabReport::where('patient_id', $id)->latest()->get();
+        $doctorReports = DoctorReport::with('doctor')->where('patient_id', $id)->latest()->get();
+        $labReports = LabReport::with('lab')->where('patient_id', $id)->latest()->get();
 
         return view('doctor.patient_reports', compact(
             'patient',
@@ -104,46 +115,101 @@ class DoctorController extends Controller
 
         $validated = $request->validate([
             'patient_id' => 'required|exists:users,id',
-            'diagnosis' => 'nullable|string',
-            'prescription' => 'nullable|string',
-            'report_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240'
+            'diagnosis' => 'required|string',
+            'prescription' => 'required|string',
+            'report_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+
+            'wallet_address' => 'required|string',
+            'signed_message' => 'required|string',
         ]);
 
-        // Verify doctor has permission
+        // Wallet check
+        if (!$doctor->wallet_address || strtolower($doctor->wallet_address) !== strtolower($validated['wallet_address'])) {
+            return back()->withErrors('Wallet mismatch');
+        }
+
+        // Signature check
+        $message = "Authorize doctor diagnosis submission for patient #{$validated['patient_id']}";
+
+        $isValid = Web3Helper::verifySignature(
+            $message,
+            $validated['signed_message'],
+            $validated['wallet_address']
+        );
+
+        if (!$isValid) {
+            return back()->withErrors('Invalid wallet signature');
+        }
+
+        // Access check
         $hasAccess = GrantAccess::where('authorized_id', $doctor->id)
             ->where('patient_id', $validated['patient_id'])
-            ->where('role_type', 'doctor')
             ->where('status', 'active')
             ->exists();
 
         if (!$hasAccess) {
-            abort(403, 'You are not authorized for this patient');
+            abort(403);
         }
 
-        $storedPath = null;
+        // File upload
+        $file = $request->file('report_file');
+        $patientId = $validated['patient_id'];
 
-        if ($request->hasFile('report_file')) {
+        $dir = "medical_records/patients/{$patientId}/doctor_reports";
 
-            $file = $request->file('report_file');
+        $storedName = now()->timestamp . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-            $patientId = $validated['patient_id'];
+        $storedPath = $file->storeAs($dir, $storedName, 's3');
 
-            // Consistent storage structure
-            $dir = "medical_records/patients/{$patientId}/doctor_reports";
-
-            $storedName = now()->format('Ymd_His') . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-            $storedPath = $file->storeAs($dir, $storedName, 's3');
+        if (!$storedPath) {
+            return back()->withErrors('Upload failed');
         }
+
+        $fileHash = hash_file('sha256', $file->getRealPath());
 
         DoctorReport::create([
             'doctor_id' => $doctor->id,
-            'patient_id' => $validated['patient_id'],
+            'patient_id' => $patientId,
             'diagnosis' => $validated['diagnosis'],
             'prescription' => $validated['prescription'],
-            'report_file' => $storedPath
+            'report_file' => $storedPath,
+            'original_filename' => $file->getClientOriginalName(),
+            'file_hash' => $fileHash,
         ]);
 
         return redirect()->back()->with('success', 'Diagnosis submitted successfully.');
+    }
+
+    public function edit($id)
+    {
+        $report = DoctorReport::findOrFail($id);
+
+        // 🔐 Ownership check
+        if ($report->doctor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('doctor.edit_report', compact('report'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $report = DoctorReport::findOrFail($id);
+
+        if ($report->doctor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $report->diagnosis = $request->diagnosis;
+        $report->prescription = $request->prescription;
+
+        $report->save();
+
+        return redirect()
+            ->route('doctor.patient_reports', [
+                'id' => $report->patient_id,
+                'tab' => 'doctor'
+            ])
+            ->with('success', 'Report updated');
     }
 }

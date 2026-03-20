@@ -1,19 +1,21 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class DoctorReport extends Model
 {
-    protected $table = 'doctor_report';
     protected $fillable = [
         'doctor_id',
         'patient_id',
-        'title',
-        'description',
-        'file_path',
+        'diagnosis',
+        'prescription',
+        'report_file',
+        'original_filename',
+        'file_hash',
     ];
+
+    // 🔗 Relationships
 
     public function doctor()
     {

@@ -12,7 +12,7 @@
                 </a>
 
             @elseif($from == 'patient_reports')
-                <a href="{{ route('patient.reports') }}">
+                <a href="{{ route('doctor.patient_reports', ['id' => $patient->id]) }}">
                     <button class="btn btn-secondary">← Back to patient report</button>
                 </a>
 
@@ -33,8 +33,6 @@
 
             <!-- Patient selection -->
             <div class="form-group">
-                <label for="patient_id">Select Patient</label>
-
                 <input type="hidden" name="patient_id" value="{{ $patient->id }}">
 
                 <p><strong>Patient:</strong> {{ $patient->name }}</p>
@@ -45,8 +43,8 @@
             <div class="form-group">
                 <label for="diagnosis">Diagnosis</label>
 
-                <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4"
-                    placeholder="Enter diagnosis"></textarea>
+                <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4" placeholder="Enter diagnosis"
+                    required></textarea>
             </div>
 
 
@@ -55,7 +53,7 @@
                 <label for="prescription">Prescription</label>
 
                 <textarea name="prescription" id="prescription" class="form-control" rows="4"
-                    placeholder="Enter prescription"></textarea>
+                    placeholder="Enter prescription" required></textarea>
             </div>
 
 
@@ -64,7 +62,7 @@
                 <label for="report_file">Upload Report File</label>
 
                 <input type="file" name="report_file" id="report_file" class="form-control-file"
-                    accept=".pdf,.jpg,.jpeg,.png">
+                    accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
 
 
@@ -81,48 +79,47 @@
 
     </div>
 
+@endsection
 
-    @push('scripts')
+@push('scripts')
 
-        <script>
+    <script>
 
-            document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function () {
 
-                const form = document.getElementById('diagnosisForm');
+            const form = document.getElementById('diagnosisForm');
 
-                form.addEventListener('submit', async function (e) {
+            form.addEventListener('submit', async function (e) {
 
-                    e.preventDefault();
+                e.preventDefault();
 
-                    try {
+                try {
 
-                        if (!window.wallet) {
-                            alert("Wallet module not loaded");
-                            return;
-                        }
-
-                        const message = "Authorize doctor diagnosis submission";
-
-                        const { address, signature } = await window.wallet.sign(message);
-
-                        document.getElementById('wallet_address_input').value = address;
-                        document.getElementById('signed_message_input').value = signature;
-
-                        form.submit();
-
-                    } catch (err) {
-
-                        console.error(err);
-                        alert(err.message || "MetaMask signing failed");
-
+                    if (!window.wallet) {
+                        alert("Wallet module not loaded");
+                        return;
                     }
 
-                });
+                    const message = `Authorize doctor diagnosis submission for patient #${form.patient_id.value}`;
+
+                    const { address, signature } = await window.wallet.sign(message);
+
+                    document.getElementById('wallet_address_input').value = address;
+                    document.getElementById('signed_message_input').value = signature;
+
+                    form.submit();
+
+                } catch (err) {
+
+                    console.error(err);
+                    alert(err.message || "MetaMask signing failed");
+
+                }
 
             });
 
-        </script>
+        });
 
-    @endpush
+    </script>
 
-@endsection
+@endpush
