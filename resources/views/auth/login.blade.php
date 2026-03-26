@@ -47,6 +47,7 @@
 
             <input type="hidden" name="wallet_address" id="wallet_address_input">
             <input type="hidden" name="signed_message" id="signed_message_input">
+            <input type="hidden" name="message" value="Login to Healthcare Data Sharing System">
 
             <button type="button" id="connectWalletBtn">
                 Connect MetaMask & Login
@@ -76,7 +77,7 @@
                         return;
                     }
 
-                    const message = "Login to Healthcare DApp";
+                    const message = "Login to Healthcare Data Sharing System";
 
                     const { address, signature } = await window.wallet.sign(message);
 

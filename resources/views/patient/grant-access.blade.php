@@ -40,8 +40,19 @@
                     @php $u = $authorizedUsers[$g->authorized_id] ?? null; @endphp
                     <tr>
                         <td>{{ $u?->name ?? ('User #' . $g->authorized_id) }}</td>
-                        <td>{{ $u?->specialty ?? $u?->email ?? '-' }}</td>
+                        <td><strong>Email:</strong> {{ $u?->email ?? '-' }} <br>
+                            @if($tab === 'doctor')
+                                <strong>Specialty:</strong> {{ $u?->specialty ?? '-' }}
+                            @endif
+                        </td>
                         <td>
+                            <button type="button" onclick="window.location='{{ route('patient.access.show', ['id' => $u->id, 'from' => 'grant']) }}'">
+                                View Profile
+                            </button>
+                            <button type="button" onclick="handleRevoke('{{ $u->wallet_address }}', this)">
+                                Revoke
+                            </button>
+                            {{--
                             <form method="POST" action="{{ route('patient.grant.access.revoke') }}" class="wallet-auth-form">
                                 @csrf
                                 <input type="hidden" name="role_type" value="{{ $tab }}">
@@ -49,7 +60,7 @@
                                 <input type="hidden" name="wallet_address" class="wallet_address_input">
                                 <input type="hidden" name="signed_message" class="signed_message_input">
                                 <button type="submit">Revoke</button>
-                            </form>
+                            </form> --}}
                         </td>
                     </tr>
                 @empty
@@ -63,49 +74,103 @@
 @endsection
 
 @push('scripts')
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="/js/web3helper.js"></script>
+
     <script>
 
-        document.addEventListener('DOMContentLoaded', function () {
+        const CONTRACT_ADDRESS = @json($contractAddress);
+        const ABI = @json($contractABI);
 
-            const forms = document.querySelectorAll('.wallet-auth-form');
+        window.addEventListener("load", async () => {
+            await initWeb3(ABI, CONTRACT_ADDRESS);
+        });
 
-            forms.forEach(form => {
+        async function handleRevoke(targetWallet, btn) {
 
-                form.addEventListener('submit', async function (e) {
+            try {
+                btn.disabled = true;
+                btn.innerText = "Processing...";
 
-                    e.preventDefault();
+                // 1. blockchain revoke
+                await revokeAccess(targetWallet);
 
-                    try {
+                // 2. sync DB
+                await fetch("{{ route('patient.grant.access.revoke') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        authorized_wallet: targetWallet,
+                        role_type: '{{ $tab }}'
+                    })
+                });
 
-                        if (!window.wallet) {
-                            alert("Wallet module not loaded");
-                            return;
-                        }
+                alert("Access revoked on blockchain");
 
-                        const message = "Authorize healthcare access change";
+                location.reload();
 
-                        const { address, signature } = await window.wallet.sign(message);
+            } catch (err) {
+                console.error(err);
+                alert(err.message || "Transaction failed");
 
-                        console.log("Wallet:", address);
-                        console.log("Signature:", signature);
+                btn.disabled = false;
+                btn.innerText = "Revoke";
+            }
+        }
 
-                        form.querySelector('.wallet_address_input').value = address;
-                        form.querySelector('.signed_message_input').value = signature;
+    </script>
 
-                        form.submit();
+@endpush
+{{--
+@push('scripts')
+<script>
 
-                    } catch (err) {
+    document.addEventListener('DOMContentLoaded', function () {
 
-                        console.error(err);
-                        alert(err.message || "MetaMask signing failed");
+        const forms = document.querySelectorAll('.wallet-auth-form');
 
+        forms.forEach(form => {
+
+            form.addEventListener('submit', async function (e) {
+
+                e.preventDefault();
+
+                try {
+
+                    if (!window.wallet) {
+                        alert("Wallet module not loaded");
+                        return;
                     }
 
-                });
+                    const message = "Authorize healthcare access change";
+
+                    const { address, signature } = await window.wallet.sign(message);
+
+                    console.log("Wallet:", address);
+                    console.log("Signature:", signature);
+
+                    form.querySelector('.wallet_address_input').value = address;
+                    form.querySelector('.signed_message_input').value = signature;
+
+                    form.submit();
+
+                } catch (err) {
+
+                    console.error(err);
+                    alert(err.message || "MetaMask signing failed");
+
+                }
 
             });
 
         });
 
-    </script>
+    });
+
+</script>
 @endpush
+--}}

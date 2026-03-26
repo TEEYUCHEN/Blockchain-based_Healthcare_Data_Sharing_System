@@ -43,11 +43,24 @@
                 @forelse($users as $u)
                     <tr>
                         <td>{{ $u->name }}</td>
-                        <td>{{ $u->specialty ?? $u->email }}</td>
+                        <td><strong>Email:</strong> {{ $u?->email ?? '-' }} <br>
+                            @if($tab === 'doctor')
+                                <strong>Specialty:</strong> {{ $u?->specialty ?? '-' }}
+                            @endif
+                        </td>
                         <td>
+                            <button type="button"
+                                onclick="window.location='{{ route('patient.access.show', ['id' => $u->id, 'from' => 'browse']) }}'">
+                                View Profile
+                            </button>
+                            
                             @if(in_array($u->id, $grantedIds))
                                 <button type="button" disabled>Granted</button>
                             @else
+                                <button type="button" onclick="handleGrant('{{ $u->wallet_address }}', this)">
+                                    Grant
+                                </button>
+                                {{--
                                 <form method="POST" action="{{ route('patient.grant.access.store') }}" style="display:inline;"
                                     class="wallet-auth-form">
                                     @csrf
@@ -57,6 +70,7 @@
                                     <input type="hidden" name="signed_message" class="signed_message_input">
                                     <button type="submit">Grant</button>
                                 </form>
+                                --}}
                             @endif
                         </td>
                     </tr>
@@ -76,49 +90,105 @@
 @endsection
 
 @push('scripts')
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="/js/web3helper.js"></script>
+
     <script>
 
-        document.addEventListener('DOMContentLoaded', function () {
+        const CONTRACT_ADDRESS = @json($contractAddress);
+        const ABI = @json($contractABI);
 
-            const forms = document.querySelectorAll('.wallet-auth-form');
+        window.addEventListener("load", async () => {
+            await initWeb3(ABI, CONTRACT_ADDRESS);
+        });
 
-            forms.forEach(form => {
+        async function handleGrant(targetWallet, btn) {
 
-                form.addEventListener('submit', async function (e) {
+            try {
+                btn.disabled = true;
+                btn.innerText = "Processing...";
 
-                    e.preventDefault();
+                // 1. blockchain
+                await grantAccess(targetWallet);
 
-                    try {
+                // 2. sync DB
+                await fetch('/patient/grant/access/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        authorized_wallet: targetWallet,
+                        role_type: '{{ $tab }}'
+                    })
+                });
 
-                        if (!window.wallet) {
-                            alert("Wallet module not loaded");
-                            return;
-                        }
+                alert("Access granted on blockchain");
 
-                        const message = "Authorize healthcare access change";
+                location.reload();
 
-                        const { address, signature } = await window.wallet.sign(message);
+            } catch (err) {
+                console.error(err);
+                alert(err.message || "Transaction failed");
 
-                        console.log("Wallet:", address);
-                        console.log("Signature:", signature);
+                btn.disabled = false;
+                btn.innerText = "Grant";
+            }
+        }
 
-                        form.querySelector('.wallet_address_input').value = address;
-                        form.querySelector('.signed_message_input').value = signature;
+    </script>
 
-                        form.submit();
+@endpush
 
-                    } catch (err) {
+{{--
+@push('scripts')
 
-                        console.error(err);
-                        alert(err.message || "MetaMask signing failed");
+<script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const forms = document.querySelectorAll('.wallet-auth-form');
+
+        forms.forEach(form => {
+
+            form.addEventListener('submit', async function (e) {
+
+                e.preventDefault();
+
+                try {
+
+                    if (!window.wallet) {
+                        alert("Wallet module not loaded");
+                        return;
                     }
 
-                });
+                    const message = "Authorize healthcare access change";
+
+                    const { address, signature } = await window.wallet.sign(message);
+
+                    console.log("Wallet:", address);
+                    console.log("Signature:", signature);
+
+                    form.querySelector('.wallet_address_input').value = address;
+                    form.querySelector('.signed_message_input').value = signature;
+
+                    form.submit();
+
+                } catch (err) {
+
+                    console.error(err);
+                    alert(err.message || "MetaMask signing failed");
+
+                }
 
             });
 
         });
 
-    </script>
+    });
+
+</script>
 @endpush
+--}}

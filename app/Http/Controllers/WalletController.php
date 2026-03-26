@@ -21,7 +21,7 @@ class WalletController extends Controller
         $isValid = $this->verifyWalletSignature(
             $request->wallet_address,
             $request->signed_message,
-            $request->message ?? 'Login to Healthcare Data Sharing System'
+            $request->message
         );
 
         if (!$isValid) {

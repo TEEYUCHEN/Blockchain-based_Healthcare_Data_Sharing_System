@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\GrantAccess;
 use App\Models\User;
-
+use Illuminate\Support\Facades\Storage;
 
 
 class GrantAccessController extends Controller
@@ -58,6 +58,35 @@ class GrantAccessController extends Controller
         return view('patient.browse-access', compact('tab', 'q', 'users', 'grantedIds'));
     }
 
+    public function show(Request $request, $id)
+    {
+        $patient = Auth::user();
+
+        // get user
+        $user = User::findOrFail($id);
+
+        // check access (IMPORTANT SECURITY)
+        $grant = GrantAccess::where([
+            'patient_id' => $patient->id,
+            'authorized_id' => $id
+        ])->first();
+
+        abort_unless($grant, 403);
+
+        return view('patient.access-detail', [
+            'user' => $user,
+            'profileUrl' => $user->profile_pic
+                ? Storage::disk('s3')->temporaryUrl(
+                    $user->profile_pic,
+                    now()->addMinutes(60)
+                )
+                : null,
+            'grant' => $grant,
+            'from' => $request->get('from')
+        ]);
+    }
+
+    /*
     public function store(Request $request)
     {
         $patient = Auth::user();
@@ -84,8 +113,32 @@ class GrantAccessController extends Controller
         ]);
 
         return back()->with('success', 'Access granted');
+    } */
+
+    public function store(Request $request)
+    {
+        $patient = Auth::user();
+
+        $wallet = $request->authorized_wallet;
+
+        // find user by wallet
+        $user = User::where('wallet_address', $wallet)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // prevent duplicate
+        GrantAccess::firstOrCreate([
+            'patient_id' => $patient->id,
+            'authorized_id' => $user->id,
+            'role_type' => $request->role_type
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
+    /*
     public function destroy(Request $request)
     {
         $patient = Auth::user();
@@ -108,5 +161,25 @@ class GrantAccessController extends Controller
         $grant->delete();
 
         return back()->with('success', 'Access revoked');
+    } */
+    public function destroy(Request $request)
+    {
+        $patient = Auth::user();
+
+        $wallet = $request->authorized_wallet;
+
+        $user = User::where('wallet_address', $wallet)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        GrantAccess::where([
+            'patient_id' => $patient->id,
+            'authorized_id' => $user->id,
+            'role_type' => $request->role_type
+        ])->delete();
+
+        return response()->json(['success' => true]);
     }
 }

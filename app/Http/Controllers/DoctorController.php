@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\LabReport;
 use App\Helpers\Web3Helper;
-
+use Illuminate\Support\Facades\Storage;
 class DoctorController extends Controller
 {
 
@@ -34,10 +34,8 @@ class DoctorController extends Controller
         return view('doctor.patient_list', compact('patients'));
     }
 
-
     public function patientDetails($id)
     {
-        // Check doctor access
         $hasAccess = GrantAccess::where('authorized_id', Auth::id())
             ->where('patient_id', $id)
             ->where('role_type', 'doctor')
@@ -50,7 +48,14 @@ class DoctorController extends Controller
 
         $patient = User::findOrFail($id);
 
-        return view('doctor.patient_details', compact('patient'));
+        $profileUrl = $patient->profile_pic
+            ? Storage::disk('s3')->temporaryUrl(
+                $patient->profile_pic,
+                now()->addMinutes(60)
+            )
+            : null;
+
+        return view('doctor.patient_details', compact('patient', 'profileUrl'));
     }
 
 

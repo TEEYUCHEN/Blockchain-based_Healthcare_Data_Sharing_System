@@ -6,6 +6,12 @@
     <div class="container">
         <h2>My Medical Records</h2>
 
+        <div style="margin-bottom: 15px;">
+            <a href="{{ route('dashboard') }}">
+                <button type="button">← Back to Dashboard</button>
+            </a>
+        </div>
+
         <!-- 🔹 Tabs -->
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <a href="{{ route('patient.records', ['tab' => 'patient']) }}">

@@ -38,6 +38,10 @@
                             <td>{{ $grant->patient->email }}</td>
 
                             <td style="display:flex; gap:8px;">
+                                <!-- View Patient Details -->
+                                <a href="{{ route('lab.patient_details', ['id' => $grant->patient->id]) }}" target="_blank">
+                                    <button>View Details</button>
+                                </a>
 
                                 <!-- View Reports -->
                                 <a href="{{ route('lab.reports', $grant->patient->id) }}">

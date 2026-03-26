@@ -10,6 +10,7 @@ use App\Models\DoctorReport;
 use App\Models\GrantAccess;
 use App\Models\User;
 use App\Helpers\Web3Helper;
+use Illuminate\Support\Facades\Storage;
 
 class LabController extends Controller
 {
@@ -140,6 +141,30 @@ class LabController extends Controller
             'labReports',
             'tab'
         ));
+    }
+
+    public function patientDetails($id)
+    {
+        $hasAccess = GrantAccess::where('authorized_id', Auth::id())
+            ->where('patient_id', $id)
+            ->where('role_type', 'lab')
+            ->where('status', 'active')
+            ->exists();
+
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized access to patient');
+        }
+
+        $patient = User::findOrFail($id);
+
+        $profileUrl = $patient->profile_pic
+            ? Storage::disk('s3')->temporaryUrl(
+                $patient->profile_pic,
+                now()->addMinutes(60)
+            )
+            : null;
+
+        return view('doctor.patient_details', compact('patient', 'profileUrl'));
     }
 
     public function edit($id)

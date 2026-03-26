@@ -45,12 +45,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/patient/grant-access/browse', [GrantAccessController::class, 'browse'])
         ->name('patient.grant.access.browse');
 
+    Route::get('/patient/access/{id}', [GrantAccessController::class, 'show'])
+        ->name('patient.access.show');
+
     Route::get('/patient/upload', function () {
         abort_unless(auth()->user()->role === 'patient', 403);
         return view('patient.upload');
     })->name('patient.upload');
 
-    Route::post('/patient/grant-access', [GrantAccessController::class, 'store'])
+    //Route::post('/patient/grant-access', [GrantAccessController::class, 'store'])->name('patient.grant.access.store');
+    Route::post('/patient/grant/access/store', [GrantAccessController::class, 'store'])
         ->name('patient.grant.access.store');
 
     Route::post('/patient/grant-access/revoke', [GrantAccessController::class, 'destroy'])
@@ -107,6 +111,8 @@ Route::middleware(['auth', 'role:lab'])->group(function () {
 
     Route::get('/lab/reports/{patient_id}', [LabController::class, 'index'])
         ->name('lab.reports');
+
+    Route::get('/lab/patient-details/{id}', [LabController::class, 'patientDetails'])->name('lab.patient_details');
 
     Route::get('/lab/report/{id}/edit', [LabController::class, 'edit'])
         ->name('lab.edit_report');
