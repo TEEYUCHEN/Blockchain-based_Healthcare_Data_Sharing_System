@@ -4,35 +4,42 @@
 
 @section('content')
     <div class="container">
-        <h2>Upload Medical Record</h2>
+        <div class="dashboard-wrapper">
+            <div class="page-header">
+                <h2>Upload Medical Record</h2>
+            </div>
+            <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                ← Back to Dashboard
+            </a><br><br>
 
-        <div style="margin-bottom: 15px;">
-            <a href="{{ route('dashboard') }}">
-                <button type="button">← Back to Dashboard</button>
-            </a>
+            <form id="uploadForm">
+                @csrf
+
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" name="title" placeholder="Title"><br>
+
+                    <label for="description">Description:</label><br>
+                    <textarea name="description" placeholder="Description"></textarea><br>
+
+                    <label for="category">Category:</label>
+                    <input type="text" name="category" placeholder="Category"><br>
+
+                    <label for="record">Select File:</label>
+                    <input type="file" name="record" required><br>
+
+                    <!-- Wallet verification -->
+                    <input type="hidden" name="wallet_address" id="wallet_address_input">
+                    <input type="hidden" name="signed_message" id="signed_message_input">
+
+                    <button type="submit" class="btn btn-primary">Sign with MetaMask & Upload</button>
+                </div>
+            </form>
+
+            <p id="successMsg" style="color:green;"></p>
+            <p id="errorMsg" style="color:red;"></p>
+
         </div>
-
-        <form id="uploadForm">
-            @csrf
-
-            <input type="text" name="title" placeholder="Title"><br>
-
-            <textarea name="description" placeholder="Description"></textarea><br>
-
-            <input type="text" name="category" placeholder="Category"><br>
-
-            <input type="file" name="record" required><br>
-
-            <!-- Wallet verification -->
-            <input type="hidden" name="wallet_address" id="wallet_address_input">
-            <input type="hidden" name="signed_message" id="signed_message_input">
-
-            <button type="submit">Sign with MetaMask & Upload</button>
-        </form>
-
-        <p id="successMsg" style="color:green;"></p>
-        <p id="errorMsg" style="color:red;"></p>
-
     </div>
 @endsection
 

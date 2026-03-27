@@ -3,87 +3,92 @@
 
 @section('content')
     <div class="container">
-        <h2>Add Access</h2>
+        <div class="dashboard-wrapper">
+            <div class="page-header">
+                <h2>Add Access</h2>
+            </div>
 
-        <div style="margin: 10px 0;">
-            <a href="{{ route('patient.grant.access', ['tab' => $tab]) }}">
-                <button type="button">← Back to Granted List</button>
-            </a>
-        </div>
+            <a href="{{ route('patient.grant.access', ['tab' => $tab]) }}" class="btn btn-secondary">
+                ← Back to Granted List
+            </a><br><br>
 
-        {{-- Tabs --}}
-        <div style="display:flex; gap:10px; margin-bottom:12px;">
-            <a href="{{ route('patient.grant.access.browse', ['tab' => 'doctor']) }}">
-                <button type="button" @if($tab === 'doctor') style="font-weight:bold;" @endif>Doctors</button>
-            </a>
-            <a href="{{ route('patient.grant.access.browse', ['tab' => 'lab']) }}">
-                <button type="button" @if($tab === 'lab') style="font-weight:bold;" @endif>Labs</button>
-            </a>
-        </div>
+            {{-- Tabs --}}
+            <div class="tabs">
+                <a href="{{ route('patient.grant.access.browse', ['tab' => 'doctor']) }}">
+                    <button type="button" @if($tab === 'doctor') style="font-weight:bold;" @endif>Doctors</button>
+                </a>
+                <a href="{{ route('patient.grant.access.browse', ['tab' => 'lab']) }}">
+                    <button type="button" @if($tab === 'lab') style="font-weight:bold;" @endif>Labs</button>
+                </a>
+            </div>
 
-        {{-- Search (keeps tab) --}}
-        <form method="GET" action="{{ route('patient.grant.access.browse') }}" style="margin-bottom:12px;">
-            <input type="hidden" name="tab" value="{{ $tab }}">
-            <input type="text" name="q" value="{{ $q }}" placeholder="Search name/email/specialty...">
-            <button type="submit">Search</button>
-            <a href="{{ route('patient.grant.access.browse', ['tab' => $tab]) }}">
-                <button type="button">Reset</button>
-            </a>
-        </form>
+            {{-- Search (keeps tab) --}}
+            <form method="GET" action="{{ route('patient.grant.access.browse') }}" style="margin-bottom:12px;">
+                <input type="hidden" name="tab" value="{{ $tab }}">
+                <input type="text" name="q" value="{{ $q }}" placeholder="Search with name/email">
+                <button type="submit" class="btn" style="background-color: gray; color: white;">Search</button>
+                <a href="{{ route('patient.grant.access.browse', ['tab' => $tab]) }}" class="btn">
+                    Reset
+                </a>
+            </form>
 
-        <table border="1" cellpadding="8" cellspacing="0" width="100%">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Info</th>
-                    <th style="width:220px;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($users as $u)
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>{{ $u->name }}</td>
-                        <td><strong>Email:</strong> {{ $u?->email ?? '-' }} <br>
-                            @if($tab === 'doctor')
-                                <strong>Specialty:</strong> {{ $u?->specialty ?? '-' }}
-                            @endif
-                        </td>
-                        <td>
-                            <button type="button"
-                                onclick="window.location='{{ route('patient.access.show', ['id' => $u->id, 'from' => 'browse']) }}'">
-                                View Profile
-                            </button>
-                            
-                            @if(in_array($u->id, $grantedIds))
-                                <button type="button" disabled>Granted</button>
-                            @else
-                                <button type="button" onclick="handleGrant('{{ $u->wallet_address }}', this)">
-                                    Grant
+                        <th>Name</th>
+                        <th>Info</th>
+                        <th style="width:220px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $u)
+                        <tr>
+                            <td>{{ $u->name }}</td>
+                            <td><strong>Email:</strong> {{ $u?->email ?? '-' }} <br>
+                                @if($tab === 'doctor')
+                                    <strong>Specialty:</strong> {{ $u?->specialty ?? '-' }}
+                                @endif
+                            </td>
+                            <td>
+                                <button type="button"
+                                    onclick="window.location='{{ route('patient.access.show', ['id' => $u->id, 'from' => 'browse']) }}'"
+                                    class="btn btn-secondary" style="padding: 2px 14px;">
+                                    View Profile
                                 </button>
-                                {{--
-                                <form method="POST" action="{{ route('patient.grant.access.store') }}" style="display:inline;"
-                                    class="wallet-auth-form">
-                                    @csrf
-                                    <input type="hidden" name="role_type" value="{{ $tab }}">
-                                    <input type="hidden" name="authorized_id" value="{{ $u->id }}">
-                                    <input type="hidden" name="wallet_address" class="wallet_address_input">
-                                    <input type="hidden" name="signed_message" class="signed_message_input">
-                                    <button type="submit">Grant</button>
-                                </form>
-                                --}}
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3">No {{ $tab }} found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
 
-        <div style="margin-top:12px;">
-            {{ $users->links() }}
+                                @if(in_array($u->id, $grantedIds))
+                                    <button type="button" disabled class="btn btn-success"
+                                        style="padding: 2px 14px;">Granted</button>
+                                @else
+                                    <button type="button" onclick="handleGrant('{{ $u->wallet_address }}', this)"
+                                        class="btn btn-primary" style="padding: 2px 14px;">
+                                        Grant
+                                    </button>
+                                    {{--
+                                    <form method="POST" action="{{ route('patient.grant.access.store') }}" style="display:inline;"
+                                        class="wallet-auth-form">
+                                        @csrf
+                                        <input type="hidden" name="role_type" value="{{ $tab }}">
+                                        <input type="hidden" name="authorized_id" value="{{ $u->id }}">
+                                        <input type="hidden" name="wallet_address" class="wallet_address_input">
+                                        <input type="hidden" name="signed_message" class="signed_message_input">
+                                        <button type="submit">Grant</button>
+                                    </form>
+                                    --}}
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3">No {{ $tab }} found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            <div style="margin-top:12px;">
+                {{ $users->links() }}
+            </div>
         </div>
     </div>
 

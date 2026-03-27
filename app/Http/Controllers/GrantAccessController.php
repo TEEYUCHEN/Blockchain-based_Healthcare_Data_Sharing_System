@@ -65,13 +65,11 @@ class GrantAccessController extends Controller
         // get user
         $user = User::findOrFail($id);
 
-        // check access (IMPORTANT SECURITY)
+        // get grant (can be null now)
         $grant = GrantAccess::where([
             'patient_id' => $patient->id,
             'authorized_id' => $id
         ])->first();
-
-        abort_unless($grant, 403);
 
         return view('patient.access-detail', [
             'user' => $user,
@@ -81,7 +79,7 @@ class GrantAccessController extends Controller
                     now()->addMinutes(60)
                 )
                 : null,
-            'grant' => $grant,
+            'grant' => $grant, // now nullable
             'from' => $request->get('from')
         ]);
     }

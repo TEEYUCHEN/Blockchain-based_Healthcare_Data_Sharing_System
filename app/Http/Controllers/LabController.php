@@ -164,7 +164,7 @@ class LabController extends Controller
             )
             : null;
 
-        return view('doctor.patient_details', compact('patient', 'profileUrl'));
+        return view('lab.patient_detail', compact('patient', 'profileUrl'));
     }
 
     public function edit($id)

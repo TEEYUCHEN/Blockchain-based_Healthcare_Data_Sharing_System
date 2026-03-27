@@ -7,22 +7,26 @@
     @endif
 
     <div class="container">
+        <div class="dashboard-wrapper">
 
-        <h2>{{ $patient->name }} Medical Records</h2>
+            <div class="page-header">
+                <h2>{{ $patient->name }} Medical Records</h2>
+            </div>
 
-        <!-- 🔹 Action Buttons -->
-            <div style="margin: 15px 0; display:flex; gap:10px;">
-                <a href="{{ route('doctor.patient_list') }}">
-                    <button class="btn btn-secondary">← Back to Patient List</button>
+            <!-- 🔹 Action Buttons -->
+            <div class="action-header">
+                <a href="{{ route('doctor.patient_list') }}" class="btn btn-secondary">
+                    ← Back to Patient List
                 </a>
 
-                <a href="{{ route('doctor.write_diagnosis', ['patient' => $patient->id, 'from' => 'patient_reports']) }}">
-                    <button class="btn btn-primary">Write Diagnosis</button>
+                <a href="{{ route('doctor.write_diagnosis', ['patient' => $patient->id, 'from' => 'patient_reports']) }}"
+                    class="btn btn-primary">
+                    Write Diagnosis
                 </a>
             </div>
 
             <!-- 🔹 Tabs -->
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div class="tabs">
                 <a href="{{ route('doctor.patient_reports', ['id' => $patient->id, 'tab' => 'patient']) }}">
                     <button @if($tab === 'patient') style="font-weight:bold;" @endif>
                         Patient Uploads
@@ -43,150 +47,158 @@
             </div>
 
             <!-- 🔹 Patient Uploads -->
-        @if($tab === 'patient')
+            @if($tab === 'patient')
 
-            <h3>Patient Uploads</h3>
+                <h3>Patient Uploads</h3>
 
-            @if($patientRecords->isEmpty())
-                <p>No patient records.</p>
-            @else
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Description</th>
-                            <th>File</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($patientRecords as $record)
+                @if($patientRecords->isEmpty())
+                    <p>No patient records.</p>
+                @else
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>{{ $record->title }}</td>
-                                <td>{{ $record->description }}</td>
-                                <td>
-                                    <a href="{{ route('records.view', ['type' => 'medical', 'id' => $record->id]) }}" target="_blank">
-                                        View
-                                    </a>
-                                    |
-                                    <a href="{{ route('records.download', ['type' => 'medical', 'id' => $record->id]) }}">
-                                        Download
-                                        </a>
-                                </td>
-                                        <td>{{ $record->created_at }}</td>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>File</th>
+                                <th>Date</th>
                             </tr>
-                        @endforeach
+                        </thead>
 
-                    </tbody>
-                </table>
+                        <tbody>
+                            @foreach($patientRecords as $record)
+                                <tr>
+                                    <td>{{ $record->title }}</td>
+                                    <td>{{ $record->description }}</td>
+                                    <td>
+                                        <small>
+                                            {{ $record->original_filename ?? 'No filename' }}
+                                        </small><br>
+                                        <a href="{{ route('records.view', ['type' => 'medical', 'id' => $record->id]) }}"
+                                            target="_blank" style="color: purple;">
+                                            View
+                                        </a>
+                                        |
+                                        <a href="{{ route('records.download', ['type' => 'medical', 'id' => $record->id]) }}">
+                                            Download
+                                        </a>
+                                    </td>
+                                    <td>{{ $record->created_at }}</td>
+                                </tr>
+                            @endforeach
+
+                        </tbody>
+                    </table>
+                @endif
+
             @endif
 
-        @endif
 
+            <!-- 🔹 Doctor Reports -->
+            @if($tab === 'doctor')
 
-        <!-- 🔹 Doctor Reports -->
-        @if($tab === 'doctor')
+                <h3>Doctor Reports</h3>
 
-            <h3>Doctor Reports</h3>
-
-            @if($doctorReports->isEmpty())
-                <p>No doctor reports.</p>
-            @else
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Diagnosis</th>
-                            <th>Prescription</th>
-                            <th>Doctor</th>
-                            <th>File</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($doctorReports as $report)
+                @if($doctorReports->isEmpty())
+                    <p>No doctor reports.</p>
+                @else
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>{{ $report->diagnosis }}</td>
-                                <td>{{ $report->prescription }}</td>
-                                <td>{{ $report->doctor->name ?? 'Doctor' }}</td>
-                                <td>
-                                    <a href="{{ route('records.view', ['type' => 'doctor', 'id' => $report->id]) }}" target="_blank">
-                                        View
-                                    </a>
-                                    |
-                                    <a href="{{ route('records.download', ['type' => 'doctor', 'id' => $report->id]) }}">
-                                        Download
+                                <th>Diagnosis</th>
+                                <th>Prescription</th>
+                                <th>Doctor</th>
+                                <th>File</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($doctorReports as $report)
+                                <tr>
+                                    <td>{{ $report->diagnosis }}</td>
+                                    <td>{{ $report->prescription }}</td>
+                                    <td>{{ $report->doctor->name ?? 'Doctor' }}</td>
+                                    <td>
+                                        <small>
+                                            {{ $report->original_filename ?? 'No filename' }}
+                                        </small><br>
+                                        <a href="{{ route('records.view', ['type' => 'doctor', 'id' => $report->id]) }}" target="_blank"
+                                            style="color: purple;">
+                                            View
+                                        </a>
+                                        |
+                                        <a href="{{ route('records.download', ['type' => 'doctor', 'id' => $report->id]) }}">
+                                            Download
                                         </a>
 
                                         @if($report->doctor_id === auth()->id())
                                             |
-                                            <a href="{{ route('doctor.edit_report', $report->id) }}">
-                                                       Edit
+                                            <a href="{{ route('doctor.edit_report', $report->id) }}" style="color:orange;">
+                                                Edit
                                             </a>
                                         @endif
-
                                         <br>
+                                    </td>
+                                    <td>{{ $report->created_at }}</td>
+                                </tr>
+                            @endforeach
 
+                        </tbody>
+                    </table>
+                @endif
+
+            @endif
+
+
+            <!-- 🔹 Lab Reports -->
+            @if($tab === 'lab')
+
+                <h3>Lab Reports</h3>
+
+                @if($labReports->isEmpty())
+                    <p>No lab reports.</p>
+                @else
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Test Type</th>
+                                <th>Result</th>
+                                <th>Lab</th>
+                                <th>File</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($labReports as $report)
+                                <tr>
+                                    <td>{{ $report->test_type }}</td>
+                                    <td>{{ $report->result }}</td>
+                                    <td>{{ $report->lab->name ?? 'Lab' }}</td>
+                                    <td>
                                         <small>
                                             {{ $report->original_filename ?? 'No filename' }}
-                                            </small>
-                                </td>
-                                        <td>{{ $report->created_at }}</td>
-                            </tr>
-                        @endforeach
-
-                    </tbody>
-                </table>
-            @endif
-
-        @endif
-
-
-        <!-- 🔹 Lab Reports -->
-        @if($tab === 'lab')
-
-            <h3>Lab Reports</h3>
-
-            @if($labReports->isEmpty())
-                <p>No lab reports.</p>
-            @else
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Test Type</th>
-                            <th>Result</th>
-                            <th>Lab</th>
-                            <th>File</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($labReports as $report)
-                            <tr>
-                                <td>{{ $report->test_type }}</td>
-                                <td>{{ $report->result }}</td>
-                                <td>{{ $report->lab->name ?? 'Lab' }}</td>
-                                <td>
-                                    <a href="{{ route('records.view', ['type' => 'lab', 'id' => $report->id]) }}" target="_blank">
-                                        View
-                                    </a>
-                                    |
-                                    <a href="{{ route('records.download', ['type' => 'lab', 'id' => $report->id]) }}">
-                                        Download
+                                        </small><br>
+                                        <a href="{{ route('records.view', ['type' => 'lab', 'id' => $report->id]) }}" target="_blank"
+                                            style="color: purple;">
+                                            View
                                         </a>
-                                </td>
-                                        <td>{{ $report->created_at }}</td>
-                            </tr>
-                        @endforeach
+                                        |
+                                        <a href="{{ route('records.download', ['type' => 'lab', 'id' => $report->id]) }}">
+                                            Download
+                                        </a>
+                                    </td>
+                                    <td>{{ $report->created_at }}</td>
+                                </tr>
+                            @endforeach
 
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                @endif
+
             @endif
 
-        @endif
-
+        </div>
     </div>
 
 @endsection

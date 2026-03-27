@@ -1,0 +1,45 @@
+:root {
+    --primary-color: #333;
+}
+
+/* PATIENT */
+body.patient {
+    --primary-color: #2ecc71;
+    /* green */
+}
+
+/* DOCTOR */
+body.doctor {
+    --primary-color: #3498db;
+    /* blue */
+}
+
+/* LAB */
+body.lab {
+    --primary-color: #e67e22;
+    /* orange */
+}
+
+body.patient,
+body.doctor,
+body.lab {
+    background-color: var(--primary-color);
+    /* 🔥 outside color */
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+}
+
+/* HEADINGS COLOR */
+h2 {
+    color: var(--primary-color);
+}
+
+/* BUTTON PRIMARY */
+.btn-primary {
+    background-color: var(--primary-color);
+}

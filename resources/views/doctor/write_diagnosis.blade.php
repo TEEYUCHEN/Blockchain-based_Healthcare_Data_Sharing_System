@@ -2,80 +2,85 @@
 
 @section('content')
     <div class="container">
+        <div class="dashboard-wrapper">
 
-        <h2>Write Diagnosis</h2>
+            <div class="page-header">
+                <h2>Write Diagnosis</h2>
+            </div>
 
-        <div style="margin-top: 15px;">
-            @if($from == 'patient_list')
-                <a href="{{ route('doctor.patient_list') }}">
-                    <button class="btn btn-secondary">← Back to patient list</button>
-                </a>
 
-            @elseif($from == 'patient_reports')
-                <a href="{{ route('doctor.patient_reports', ['id' => $patient->id]) }}">
-                    <button class="btn btn-secondary">← Back to patient report</button>
-                </a>
+            <div>
+                @if($from == 'patient_list')
+                    <a href="{{ route('doctor.patient_list') }}" class="btn btn-secondary">
+                        ← Back to patient list
+                    </a>
 
-            @else
-                <a href="{{ route('dashboard') }}">
-                    <button class="btn btn-secondary">← Back to Dashboard</button>
-                </a>
+                @elseif($from == 'patient_reports')
+                    <a href="{{ route('doctor.patient_reports', ['id' => $patient->id]) }}" class="btn btn-secondary">
+                        ← Back to patient report
+                    </a>
+
+                @else
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                        ← Back to Dashboard
+                    </a>
+                @endif
+            </div><br>
+
+            @if(session('success'))
+                <p style="color:green">{{ session('success') }}</p>
             @endif
+
+            <form method="POST" action="{{ route('doctor.submit_diagnosis') }}" enctype="multipart/form-data"
+                id="diagnosisForm">
+                @csrf
+
+                <!-- Patient selection -->
+                <div class="form-group">
+                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+
+                    <p><strong>Patient:</strong> {{ $patient->name }}</p>
+                </div>
+
+
+                <!-- Diagnosis -->
+                <div class="form-group">
+                    <label for="diagnosis">Diagnosis:</label>
+
+                    <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4" placeholder="Enter diagnosis"
+                        required></textarea>
+                </div>
+
+
+                <!-- Prescription -->
+                <div class="form-group">
+                    <label for="prescription">Prescription:</label>
+
+                    <textarea name="prescription" id="prescription" class="form-control" rows="4"
+                        placeholder="Enter prescription" required></textarea>
+                </div>
+
+
+                <!-- File upload -->
+                <div class="form-group">
+                    <label for="report_file">Upload Report File:</label>
+
+                    <input type="file" name="report_file" id="report_file" class="form-control-file"
+                        accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
+
+
+                <!-- Wallet verification -->
+                <input type="hidden" name="wallet_address" id="wallet_address_input">
+                <input type="hidden" name="signed_message" id="signed_message_input">
+
+
+                <button type="submit" class="btn btn-primary">
+                    Sign with MetaMask & Submit
+                </button>
+
+            </form>
         </div>
-
-        @if(session('success'))
-            <p style="color:green">{{ session('success') }}</p>
-        @endif
-
-        <form method="POST" action="{{ route('doctor.submit_diagnosis') }}" enctype="multipart/form-data"
-            id="diagnosisForm">
-            @csrf
-
-            <!-- Patient selection -->
-            <div class="form-group">
-                <input type="hidden" name="patient_id" value="{{ $patient->id }}">
-
-                <p><strong>Patient:</strong> {{ $patient->name }}</p>
-            </div>
-
-
-            <!-- Diagnosis -->
-            <div class="form-group">
-                <label for="diagnosis">Diagnosis</label>
-
-                <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4" placeholder="Enter diagnosis"
-                    required></textarea>
-            </div>
-
-
-            <!-- Prescription -->
-            <div class="form-group">
-                <label for="prescription">Prescription</label>
-
-                <textarea name="prescription" id="prescription" class="form-control" rows="4"
-                    placeholder="Enter prescription" required></textarea>
-            </div>
-
-
-            <!-- File upload -->
-            <div class="form-group">
-                <label for="report_file">Upload Report File</label>
-
-                <input type="file" name="report_file" id="report_file" class="form-control-file"
-                    accept=".pdf,.jpg,.jpeg,.png" required>
-            </div>
-
-
-            <!-- Wallet verification -->
-            <input type="hidden" name="wallet_address" id="wallet_address_input">
-            <input type="hidden" name="signed_message" id="signed_message_input">
-
-
-            <button type="submit" class="btn btn-primary">
-                Sign with MetaMask & Submit
-            </button>
-
-        </form>
 
     </div>
 
