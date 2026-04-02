@@ -4,6 +4,13 @@
     <div class="container">
         <div class="dashboard-wrapper">
             <h2>Register</h2>
+
+            @if ($errors->any())
+                <script>
+                    alert("{{ $errors->first() }}");
+                </script>
+            @endif
+
             <form id="registerForm" method="POST">
                 @csrf
                 <div>
@@ -161,13 +168,15 @@
 
                     if (!response.ok) {
 
+                        let message = "";
+
                         if (data.errors) {
-                            document.getElementById('errorMsg').textContent =
-                                Object.values(data.errors).flat().join("\n");
+                            message = Object.values(data.errors).flat().join("\n");
                         } else {
-                            document.getElementById('errorMsg').textContent =
-                                data.message || "Registration failed";
+                            message = data.message || "Registration failed";
                         }
+
+                        alert(message); // 🔥 THIS is your popup
 
                         return;
                     }

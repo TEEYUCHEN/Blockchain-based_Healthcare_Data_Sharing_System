@@ -7,20 +7,9 @@
 
             {{-- Show Laravel validation errors --}}
             @if ($errors->any())
-                <div style="color:red; margin-bottom:10px;">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            {{-- Show controller errors --}}
-            @if(session('error'))
-                <div style="color:red; margin-bottom:10px;">
-                    {{ session('error') }}
-                </div>
+                <script>
+                    alert("{{ $errors->first() }}");
+                </script>
             @endif
 
             <form id="loginForm" method="POST" action="{{ route('login') }}">
